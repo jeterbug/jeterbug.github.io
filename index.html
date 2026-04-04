@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#CACDE8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#09090D" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#CACDE8" id="theme-color-meta">
   <title>Jeter — Portfolio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1824,9 +1827,14 @@
     function toggleTheme() {
       const html  = document.documentElement;
       const isDark = html.getAttribute('data-theme') === 'dark';
-      html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      const newTheme = isDark ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
       document.getElementById('ico-sun').style.display  = isDark ? 'block' : 'none';
       document.getElementById('ico-moon').style.display = isDark ? 'none'  : 'block';
+      // Update Safari theme-color to match new theme
+      document.getElementById('theme-color-meta').setAttribute(
+        'content', newTheme === 'dark' ? '#09090D' : '#CACDE8'
+      );
     }
 
     // Scroll reveal
