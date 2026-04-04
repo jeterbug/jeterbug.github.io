@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jeter — Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <style>
+    /* ─── RESET ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ─── TOKENS — DARK (default) ────────────────────────── */
+    :root {
+      /* 3-tier depth: hero/footer → dark sections → light sections → cards */
+      --bg:          #14161E;   /* "light" sections in dark mode */
+      --surface:     #1C1F2A;   /* card surfaces */
+      --surface-2:   #22263A;
+      --surface-3:   #2A2F46;
+      --border:      rgba(255,255,255,0.07);
+      --border-mid:  rgba(255,255,255,0.11);
+      --border-str:  rgba(255,255,255,0.16);
+
+      --text-1: #EFF1F8;
+      --text-2: #858EA4;
+      --text-3: #3F4759;
+
+      --hero-bg:      #09090D;   /* deepest — hero & footer */
+      --dark-sec-bg:  #0E1018;   /* expertise & experience sections */
+
+      --btn-fill:   #EFF1F8;
+      --btn-text:   #0C0D11;
+      --btn-fill-h: #ffffff;
+
+      --r-sm:   10px;
+      --r-md:   16px;
+      --r-lg:   24px;
+      --r-xl:   32px;
+      --r-pill: 100px;
+
+      --sh-sm: 0 1px 4px rgba(0,0,0,.5);
+      --sh-md: 0 4px 20px rgba(0,0,0,.55), 0 1px 4px rgba(0,0,0,.35);
+      --sh-lg: 0 12px 48px rgba(0,0,0,.65), 0 4px 16px rgba(0,0,0,.4);
+
+      --max-w: 1100px;
+      --section-py: 120px;
+    }
+
+    /* ─── TOKENS — LIGHT ─────────────────────────────────── */
+    [data-theme="light"] {
+      --hero-bg:     #F0F1F5;
+      --bg:          #F0F1F5;
+      --surface:     #FFFFFF;
+      --surface-2:   #E8EAF0;
+      --surface-3:   #DDE0E8;
+      --border:      rgba(0,0,0,0.07);
+      --border-mid:  rgba(0,0,0,0.10);
+      --border-str:  rgba(0,0,0,0.15);
+
+      --text-1: #111318;
+      --text-2: #4D5568;
+      --text-3: #9199AC;
+
+      --btn-fill:   #111318;
+      --btn-text:   #EFF1F8;
+      --btn-fill-h: #000000;
+
+      --sh-sm: 0 1px 4px rgba(0,0,0,.06);
+      --sh-md: 0 4px 20px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.04);
+      --sh-lg: 0 12px 48px rgba(0,0,0,.10), 0 4px 16px rgba(0,0,0,.05);
+    }
+
+    /* Hero is ALWAYS dark — not affected by theme */
+    .hero-always-dark {
+      background: var(--hero-bg);
+    }
+
+    /* ─── BASE ───────────────────────────────────────────── */
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text-1);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      transition: background .5s cubic-bezier(0.4,0,0.2,1), color .5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* Global theme-transition sweep — catches all bg/color/border changes */
+    *, *::before, *::after {
+      transition-property: background-color, border-color, color, box-shadow;
+      transition-duration: .45s;
+      transition-timing-function: cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .container {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 40px;
+    }
+
+    /* Hero content aligns with the nav pill (800px) not the wider site grid */
+    #hero > .container {
+      width: 100%;
+      max-width: 800px;
+    }
+
+    /* ─── NAV ────────────────────────────────────────────── */
+    .nav-wrap {
+      position: fixed;
+      top: 18px;
+      left: 0; right: 0;
+      z-index: 999;
+      display: flex;
+      justify-content: center;
+      padding: 0 24px;
+      pointer-events: none;
+    }
+
+    nav {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      align-items: center;
+      background: rgba(12, 13, 17, 0.80);
+      backdrop-filter: blur(28px) saturate(160%);
+      -webkit-backdrop-filter: blur(28px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: var(--r-pill);
+      padding: 8px 8px 8px 24px;
+      box-shadow: 0 4px 32px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,0.05) inset;
+      pointer-events: all;
+      transition: background .3s;
+    }
+
+    [data-theme="light"] nav {
+      background: rgba(240, 241, 245, 0.88);
+      border-color: rgba(0,0,0,0.10);
+      box-shadow: 0 4px 32px rgba(0,0,0,.12);
+    }
+
+    .nav-logo {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #EFF1F8;
+      margin-right: auto;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    [data-theme="light"] .nav-logo { color: var(--text-1); }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 2px;
+    }
+
+    .nav-links a {
+      display: block;
+      padding: 8px 15px;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(239,241,248,0.55);
+      border-radius: var(--r-pill);
+      transition: color .2s, background .2s;
+      letter-spacing: -0.01em;
+    }
+
+    [data-theme="light"] .nav-links a { color: var(--text-2); }
+
+    .nav-links a:hover {
+      color: #EFF1F8;
+      background: rgba(255,255,255,0.08);
+    }
+
+    [data-theme="light"] .nav-links a:hover {
+      color: var(--text-1);
+      background: rgba(0,0,0,0.06);
+    }
+
+    /* Active nav pill */
+    .nav-links a.nav-active {
+      color: #EFF1F8;
+      background: rgba(255,255,255,0.11);
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+
+    [data-theme="light"] .nav-links a.nav-active {
+      color: var(--text-1);
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 10px;
+    }
+
+    .theme-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(239,241,248,0.5);
+      transition: all .2s;
+      flex-shrink: 0;
+    }
+
+    [data-theme="light"] .theme-btn {
+      border-color: rgba(0,0,0,0.12);
+      background: rgba(0,0,0,0.05);
+      color: var(--text-2);
+    }
+
+    .theme-btn:hover {
+      border-color: rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.10);
+      color: #EFF1F8;
+    }
+
+    [data-theme="light"] .theme-btn:hover {
+      border-color: rgba(0,0,0,0.18);
+      background: rgba(0,0,0,0.08);
+      color: var(--text-1);
+    }
+
+    .nav-cta {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: #EFF1F8;
+      color: #0C0D11 !important;
+      border-radius: var(--r-pill);
+      padding: 9px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      transition: all .2s;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.2) inset;
+    }
+
+    [data-theme="light"] .nav-cta {
+      background: #111318;
+      color: #EFF1F8 !important;
+    }
+
+    .nav-cta:hover {
+      background: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,0.2) inset;
+    }
+
+    [data-theme="light"] .nav-cta:hover {
+      background: #000000;
+    }
+
+    /* ─── HERO ───────────────────────────────────────────── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 140px 0 100px;
+      /* Dark mode: atmospheric diagonal gradient — deep obsidian to a lifted slate */
+      background: linear-gradient(145deg, #1C1E2E 0%, #12131C 30%, #09090D 65%);
+      transition: background .35s ease;
+    }
+
+    /* Grain texture (dark only) */
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.7;
+      transition: opacity .35s ease;
+    }
+
+    [data-theme="light"] #hero::before { opacity: 0; }
+
+    /* Light mode: bold warm-lavender to neutral, clearly distinct from sections below */
+    [data-theme="light"] #hero {
+      background: linear-gradient(150deg, #9295B8 0%, #A5A8CC 15%, #B8BBDA 32%, #CACDE8 50%, #DDE0F2 70%, #F0F1F5 90%) !important;
+    }
+
+    /* Radial spotlight — top-left corner lift in dark mode */
+    #hero::after {
+      content: '';
+      position: absolute;
+      width: 900px; height: 900px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.055) 0%, transparent 60%);
+      top: -360px; left: -200px;
+      pointer-events: none;
+      z-index: 0;
+      transition: opacity .35s ease;
+    }
+
+    [data-theme="light"] #hero::after { opacity: 0; }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+    }
+
+    /* ─── HERO ENTRANCE ANIMATIONS ──────────────────────── */
+    @keyframes heroReveal {
+      from {
+        opacity: 0;
+        transform: translateY(28px) scale(0.98);
+        filter: blur(3px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0px);
+      }
+    }
+
+    @keyframes heroFadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Staggered cascade — each element fires after the last */
+    .hero-h1   {
+      animation: heroReveal  .85s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+    }
+    .hero-role {
+      animation: heroFadeUp  .70s cubic-bezier(0.22, 1, 0.36, 1) 0.30s both;
+    }
+    .hero-bio  {
+      animation: heroFadeUp  .70s cubic-bezier(0.22, 1, 0.36, 1) 0.44s both;
+    }
+    .hero-btns {
+      animation: heroFadeUp  .65s cubic-bezier(0.22, 1, 0.36, 1) 0.58s both;
+    }
+
+    /* Respect reduced-motion preference */
+    @media (prefers-reduced-motion: reduce) {
+      .hero-h1, .hero-role, .hero-bio, .hero-btns {
+        animation: none;
+      }
+    }
+
+    /* Hero text — light mode overrides */
+    [data-theme="light"] .hero-h1       { color: var(--text-1); }
+    [data-theme="light"] .hero-role     { color: var(--text-2); }
+    [data-theme="light"] .hero-bio      { color: var(--text-2); }
+    [data-theme="light"] .hero-bio strong { color: var(--text-1); }
+
+    [data-theme="light"] .btn-hero-primary {
+      background: #111318;
+      color: #EFF1F8;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset;
+    }
+
+    [data-theme="light"] .btn-hero-primary:hover {
+      background: #000;
+      box-shadow: 0 8px 32px rgba(0,0,0,.18);
+    }
+
+    [data-theme="light"] .btn-hero-outline {
+      color: rgba(17,19,24,0.55);
+      border-color: rgba(0,0,0,0.18);
+    }
+
+    [data-theme="light"] .btn-hero-outline:hover {
+      background: rgba(0,0,0,0.05);
+      border-color: rgba(0,0,0,0.30);
+      color: #111318;
+    }
+
+
+    .hero-h1 {
+      font-size: clamp(56px, 7vw, 96px);
+      font-weight: 900;
+      letter-spacing: -0.045em;
+      line-height: 0.96;
+      color: #EFF1F8;
+      margin-bottom: 10px;
+    }
+
+    .hero-role {
+      font-size: clamp(20px, 2.8vw, 32px);
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: rgba(239,241,248,0.45);
+      margin-bottom: 28px;
+    }
+
+    .hero-bio {
+      font-size: 17px;
+      line-height: 1.72;
+      color: rgba(239,241,248,0.5);
+      max-width: 560px;
+      margin-bottom: 48px;
+      font-weight: 400;
+    }
+
+    .hero-bio strong {
+      color: rgba(239,241,248,0.85);
+      font-weight: 600;
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn-hero-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #EFF1F8;
+      color: #0C0D11;
+      border-radius: var(--r-pill);
+      padding: 14px 30px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      transition: all .22s;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.2) inset;
+      border: none; cursor: pointer;
+    }
+
+    .btn-hero-primary:hover {
+      background: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,0.2) inset;
+    }
+
+    .btn-hero-outline {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: transparent;
+      color: rgba(239,241,248,0.65);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: var(--r-pill);
+      padding: 14px 30px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      transition: all .22s;
+      cursor: pointer;
+    }
+
+    .btn-hero-outline:hover {
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.28);
+      color: #EFF1F8;
+    }
+
+
+    /* ─── SHARED SECTION STYLES ──────────────────────────── */
+    .s-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .s-label::before {
+      content: '';
+      display: block;
+      width: 18px; height: 1.5px;
+      background: var(--text-3);
+    }
+
+    .s-h {
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.04;
+      color: var(--text-1);
+      margin-bottom: 16px;
+    }
+
+    .s-sub {
+      font-size: 17px;
+      color: var(--text-2);
+      line-height: 1.65;
+      max-width: 500px;
+      font-weight: 400;
+    }
+
+    /* Light section base */
+    .s-light {
+      padding: var(--section-py) 0;
+      background: var(--bg);
+    }
+
+    /* Dark section base — always dark, doesn't toggle */
+    .s-dark {
+      padding: var(--section-py) 0;
+      background: var(--dark-sec-bg, #0E1018);
+      color: #EFF1F8;
+      position: relative;
+    }
+
+    [data-theme="light"] .s-dark {
+      background: #1A1D26;
+    }
+
+    .s-dark .s-label {
+      color: rgba(239,241,248,0.28);
+    }
+
+    .s-dark .s-label::before {
+      background: rgba(239,241,248,0.28);
+    }
+
+    .s-dark .s-h { color: #EFF1F8; }
+    .s-dark .s-sub { color: rgba(239,241,248,0.48); }
+
+    /* ─── ABOUT ──────────────────────────────────────────── */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: stretch;
+      margin-top: 64px;
+    }
+
+    .about-body p {
+      font-size: 17px;
+      line-height: 1.78;
+      color: var(--text-2);
+      margin-bottom: 18px;
+    }
+
+    .about-body strong {
+      color: var(--text-1);
+      font-weight: 600;
+    }
+
+    .about-socials {
+      display: flex;
+      gap: 8px;
+      margin-top: 32px;
+    }
+
+    .soc-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border-str);
+      background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-2);
+      transition: all .2s;
+      box-shadow: var(--sh-sm);
+    }
+
+    .soc-btn:hover {
+      background: var(--surface-3);
+      color: var(--text-1);
+      border-color: var(--border-str);
+      transform: translateY(-2px);
+      box-shadow: var(--sh-md);
+    }
+
+    .stats-2x2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .stat-tile {
+      background: var(--surface);
+      border: 1px solid var(--border-mid);
+      border-radius: var(--r-lg);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      transition: border-color .25s, transform .25s, box-shadow .25s;
+      box-shadow: var(--sh-sm);
+    }
+
+    .stat-tile:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--sh-md);
+      border-color: var(--border-str);
+    }
+
+    .stat-tile-num {
+      font-size: 44px;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      color: var(--text-1);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-tile-lbl {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-3);
+    }
+
+    /* ─── EXPERTISE (dark section) ───────────────────────── */
+    .expertise-hd {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 48px;
+      margin-bottom: 56px;
+    }
+
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 14px;
+    }
+
+    .skill-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--r-lg);
+      padding: 32px 28px;
+      transition: all .25s;
+    }
+
+    .skill-card:hover {
+      transform: translateY(-4px);
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.14);
+      box-shadow: 0 16px 48px rgba(0,0,0,.5);
+    }
+
+    .skill-icon {
+      width: 44px; height: 44px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: var(--r-md);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(239,241,248,0.6);
+      margin-bottom: 20px;
+    }
+
+    .skill-card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #EFF1F8;
+      margin-bottom: 8px;
+    }
+
+    .skill-card p {
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: rgba(239,241,248,0.42);
+    }
+
+    /* ─── WORK (light section) ───────────────────────────── */
+    .work-hd {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 56px;
+    }
+
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: transparent;
+      color: var(--text-2);
+      border: 1px solid var(--border-str);
+      border-radius: var(--r-pill);
+      padding: 10px 22px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all .2s;
+      cursor: pointer;
+      letter-spacing: -0.01em;
+    }
+
+    .btn-ghost:hover {
+      background: var(--surface-3);
+      color: var(--text-1);
+      border-color: var(--border-str);
+    }
+
+    .work-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 18px;
+    }
+
+    .work-card {
+      background: var(--surface);
+      border: 1px solid var(--border-mid);
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all .25s;
+      box-shadow: var(--sh-sm);
+    }
+
+    .work-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--sh-lg);
+      border-color: var(--border-str);
+    }
+
+    .work-thumb {
+      height: 188px;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .work-thumb-inner {
+      width: 60px; height: 60px;
+      background: var(--surface);
+      border: 1px solid var(--border-str);
+      border-radius: var(--r-md);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-2);
+      box-shadow: var(--sh-md);
+    }
+
+    .work-body {
+      padding: 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .work-cat {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 8px;
+    }
+
+    .work-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--text-1);
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .work-card p {
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: var(--text-2);
+      flex: 1;
+      margin-bottom: 20px;
+    }
+
+    .work-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 18px;
+    }
+
+    .chip {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-3);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      padding: 3px 10px;
+    }
+
+    .work-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+      transition: color .18s, gap .18s;
+    }
+
+    .work-link:hover {
+      color: var(--text-1);
+      gap: 9px;
+    }
+
+    /* ─── EXPERIENCE (dark section) ──────────────────────── */
+    .exp-list { margin-top: 64px; }
+
+    .exp-row {
+      display: grid;
+      grid-template-columns: 190px 1fr;
+      gap: 48px;
+      padding: 40px 0;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      transition: border-color .2s;
+    }
+
+    .exp-row:last-child {
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .exp-row:hover {
+      border-top-color: rgba(255,255,255,0.13);
+    }
+
+    .exp-meta { padding-top: 3px; }
+
+    .exp-period {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(239,241,248,0.28);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    .exp-org {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(239,241,248,0.5);
+    }
+
+    .exp-role {
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: #EFF1F8;
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+
+    .exp-desc {
+      font-size: 15px;
+      line-height: 1.72;
+      color: rgba(239,241,248,0.45);
+    }
+
+    .exp-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 16px;
+    }
+
+    .exp-chip {
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(239,241,248,0.4);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: var(--r-pill);
+      padding: 4px 11px;
+    }
+
+    /* ─── CONTACT (light section) ────────────────────────── */
+    .cu-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      align-items: stretch;
+      border: 1px solid var(--border-str);
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      box-shadow: var(--sh-lg);
+      margin-top: 64px;
+    }
+
+    .cu-left {
+      background: #1C1E26;
+      padding: 52px 48px;
+      color: #EFF1F8;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Softer dark on light mode */
+    [data-theme="light"] .cu-left {
+      background: #2A2D38;
+    }
+
+    .cu-left::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    .cu-left-inner { position: relative; z-index: 1; }
+
+    .ccc-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: rgba(239,241,248,0.3);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ccc-tag::before {
+      content: '';
+      display: block;
+      width: 18px; height: 1.5px;
+      background: rgba(239,241,248,0.3);
+    }
+
+    .ccc-h {
+      font-size: clamp(22px, 2.5vw, 30px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.12;
+      color: #EFF1F8;
+      margin-bottom: 14px;
+    }
+
+    .ccc-sub {
+      font-size: 14px;
+      line-height: 1.72;
+      color: rgba(239,241,248,0.42);
+      margin-bottom: 32px;
+    }
+
+    .ccc-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ccc-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: var(--r-md);
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(239,241,248,0.55);
+      transition: all .2s;
+    }
+
+    .ccc-row:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.15);
+      color: #EFF1F8;
+    }
+
+    .ccc-icon {
+      width: 32px; height: 32px;
+      border-radius: var(--r-sm);
+      background: rgba(255,255,255,0.07);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(239,241,248,0.45);
+      flex-shrink: 0;
+    }
+
+    .cu-divider {
+      background: var(--border-str);
+      width: 1px;
+    }
+
+    .cu-right {
+      background: var(--surface);
+      padding: 52px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Contact form */
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .fg {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .fg label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-2);
+      letter-spacing: 0.02em;
+    }
+
+    .fg input,
+    .fg textarea {
+      background: var(--surface);
+      border: 1.5px solid var(--border-str);
+      border-radius: var(--r-md);
+      padding: 13px 16px;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--text-1);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      resize: vertical;
+    }
+
+    .fg input::placeholder,
+    .fg textarea::placeholder { color: var(--text-3); }
+
+    .fg input:focus,
+    .fg textarea:focus {
+      border-color: var(--text-1);
+      box-shadow: 0 0 0 3px rgba(0,0,0,.06);
+    }
+
+    [data-theme="dark"] .fg input:focus,
+    [data-theme="dark"] .fg textarea:focus {
+      box-shadow: 0 0 0 3px rgba(255,255,255,.06);
+    }
+
+    .fg textarea { min-height: 120px; }
+
+    .btn-submit {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--btn-fill);
+      color: var(--btn-text);
+      border-radius: var(--r-pill);
+      padding: 14px 32px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      border: none; cursor: pointer;
+      transition: all .22s;
+      width: 100%;
+    }
+
+    .btn-submit:hover {
+      background: var(--btn-fill-h);
+      transform: translateY(-2px);
+      box-shadow: var(--sh-lg);
+    }
+
+    /* ─── FOOTER ─────────────────────────────────────────── */
+    footer {
+      background: var(--hero-bg, #09090D);
+      padding: 40px 0;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-logo {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: rgba(239,241,248,0.4);
+    }
+
+    .footer-copy {
+      font-size: 12px;
+      color: rgba(239,241,248,0.2);
+    }
+
+    .footer-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(239,241,248,0.25);
+      transition: color .2s;
+    }
+
+    .footer-top:hover { color: rgba(239,241,248,0.6); }
+
+    /* ─── SCROLL REVEAL ──────────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .55s ease, transform .55s ease;
+    }
+
+    .reveal.in { opacity: 1; transform: none; }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────── */
+    @media (max-width: 920px) {
+      .about-grid { grid-template-columns: 1fr; }
+      .cu-wrap { grid-template-columns: 1fr; }
+      .cu-divider { height: 1px; width: auto; }
+      .skills-grid, .work-grid { grid-template-columns: 1fr 1fr; }
+      .exp-row { grid-template-columns: 1fr; gap: 12px; }
+      .expertise-hd, .work-hd { flex-direction: column; align-items: flex-start; }
+      :root { --section-py: 88px; }
+    }
+
+    @media (max-width: 600px) {
+      .skills-grid, .work-grid, .stats-2x2 { grid-template-columns: 1fr; }
+      .container { padding: 0 24px; }
+      .nav-links { display: none; }
+      :root { --section-py: 72px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ════ NAV ════════════════════════════════════════════ -->
+  <div class="nav-wrap">
+    <nav>
+      <a href="#hero" class="nav-logo">Jeter</a>
+      <ul class="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#expertise">Expertise</a></li>
+        <li><a href="#work">Work</a></li>
+        <li><a href="#experience">Experience</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <div class="nav-right">
+        <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle theme">
+          <i data-lucide="sun" width="15" height="15" id="ico-sun" style="display:none"></i>
+          <i data-lucide="moon" width="15" height="15" id="ico-moon"></i>
+        </button>
+        <a href="#contact" class="nav-cta">
+          Let's Talk
+          <i data-lucide="arrow-right" width="13" height="13"></i>
+        </a>
+      </div>
+    </nav>
+  </div>
+
+
+  <!-- ════ HERO ══════════════════════════════════════════ -->
+  <section id="hero">
+    <div class="container">
+      <div class="hero-inner">
+          <h1 class="hero-h1">Hi, I'm Jeter.</h1>
+          <p class="hero-role">Brand &amp; Strategy Lead</p>
+
+          <p class="hero-bio">
+            I help brands find their edge — through sharp strategy,
+            intentional design, and storytelling that actually moves people.
+            Currently leading growth at <strong>Primitive</strong>.
+          </p>
+
+          <div class="hero-btns">
+            <a href="#work" class="btn-hero-primary">
+              <i data-lucide="layers" width="15" height="15"></i>
+              View My Work
+            </a>
+            <a href="#contact" class="btn-hero-outline">
+              <i data-lucide="mail" width="15" height="15"></i>
+              Get in Touch
+            </a>
+          </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════ ABOUT ══════════════════════════════════════════ -->
+  <section id="about" class="s-light">
+    <div class="container">
+      <div class="reveal">
+        <div class="s-label">About Me</div>
+        <h2 class="s-h">The thinking behind<br>the work.</h2>
+      </div>
+
+      <div class="about-grid">
+        <div class="about-body reveal">
+          <p>
+            I'm a brand strategist and creative lead with a decade of experience
+            building <strong>identities that last</strong>. My background spans agency
+            and in-house roles — which means I know how to move fast without cutting
+            corners, and how to hold a brand's vision steady even as tactics shift.
+          </p>
+          <p>
+            At <strong>Primitive</strong>, I lead the charge on brand positioning,
+            go-to-market strategy, and the kind of content that earns attention rather
+            than buying it. I believe the best brands aren't just seen — they're felt.
+          </p>
+          <p>
+            Outside of work you'll find me obsessing over typography, reading about
+            systems thinking, or somewhere outdoors with a bad cup of coffee.
+          </p>
+          <div class="about-socials">
+            <a href="#" class="soc-btn" title="LinkedIn">
+              <i data-lucide="linkedin" width="15" height="15"></i>
+            </a>
+            <a href="#" class="soc-btn" title="Twitter / X">
+              <i data-lucide="twitter" width="15" height="15"></i>
+            </a>
+            <a href="#" class="soc-btn" title="GitHub">
+              <i data-lucide="github" width="15" height="15"></i>
+            </a>
+            <a href="#" class="soc-btn" title="Download Resume">
+              <i data-lucide="file-down" width="15" height="15"></i>
+            </a>
+          </div>
+        </div>
+
+        <div class="stats-2x2 reveal">
+          <div class="stat-tile">
+            <div class="stat-tile-num">8+</div>
+            <div class="stat-tile-lbl">Years of experience</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-tile-num">60+</div>
+            <div class="stat-tile-lbl">Projects delivered</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-tile-num">40+</div>
+            <div class="stat-tile-lbl">Brands worked with</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-tile-num">3×</div>
+            <div class="stat-tile-lbl">Avg. pipeline growth</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════ EXPERTISE ══════════════════════════════════════ -->
+  <section id="expertise" class="s-dark">
+    <div class="container">
+      <div class="expertise-hd reveal">
+        <div>
+          <div class="s-label">What I Do</div>
+          <h2 class="s-h" style="color:#EFF1F8;">Where I create<br>the most impact.</h2>
+        </div>
+        <p style="font-size:16px;color:rgba(239,241,248,0.42);max-width:340px;line-height:1.65;font-weight:400;">
+          A focused set of disciplines — all connected by a single throughline:
+          making brands mean something to the people they serve.
+        </p>
+      </div>
+
+      <div class="skills-grid">
+        <div class="skill-card reveal">
+          <div class="skill-icon"><i data-lucide="compass" width="20" height="20"></i></div>
+          <h3>Brand Strategy</h3>
+          <p>Positioning, messaging architecture, and competitive differentiation that gives your brand a reason to exist in the market.</p>
+        </div>
+        <div class="skill-card reveal">
+          <div class="skill-icon"><i data-lucide="pen-tool" width="20" height="20"></i></div>
+          <h3>Creative Direction</h3>
+          <p>Visual language, tone of voice, and campaign concepting that translate strategy into something people actually want to look at.</p>
+        </div>
+        <div class="skill-card reveal">
+          <div class="skill-icon"><i data-lucide="trending-up" width="20" height="20"></i></div>
+          <h3>Growth Marketing</h3>
+          <p>Full-funnel strategy that connects brand equity to pipeline — from awareness to conversion, with clear attribution along the way.</p>
+        </div>
+        <div class="skill-card reveal">
+          <div class="skill-icon"><i data-lucide="file-text" width="20" height="20"></i></div>
+          <h3>Content &amp; SEO</h3>
+          <p>Organic content strategies built to earn authority — editorial frameworks, keyword architecture, and distribution built for longevity.</p>
+        </div>
+        <div class="skill-card reveal">
+          <div class="skill-icon"><i data-lucide="bar-chart-2" width="20" height="20"></i></div>
+          <h3>Analytics &amp; Insights</h3>
+          <p>Data that tells a story. Dashboards and reporting frameworks that translate numbers into decisions leadership can act on.</p>
+        </div>
+        <div class="skill-card reveal">
+          <div class="skill-icon"><i data-lucide="users" width="20" height="20"></i></div>
+          <h3>Team Leadership</h3>
+          <p>Building creative teams, managing external partners, and creating a culture where good work is expected — and celebrated.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════ WORK ════════════════════════════════════════════ -->
+  <section id="work" class="s-light">
+    <div class="container">
+      <div class="work-hd reveal">
+        <div>
+          <div class="s-label">Selected Work</div>
+          <h2 class="s-h">Projects I'm<br>proud of.</h2>
+        </div>
+        <a href="#" class="btn-ghost" style="align-self:flex-end;margin-bottom:4px;">
+          View All Work
+          <i data-lucide="arrow-right" width="13" height="13"></i>
+        </a>
+      </div>
+
+      <div class="work-grid">
+
+        <div class="work-card reveal">
+          <div class="work-thumb">
+            <div class="work-thumb-inner">
+              <i data-lucide="layers" width="26" height="26"></i>
+            </div>
+          </div>
+          <div class="work-body">
+            <div class="work-cat">Brand Identity</div>
+            <h3>Full Brand Overhaul for SaaS Startup</h3>
+            <p>Led end-to-end rebrand for a Series A company — new positioning, visual system, and launch campaign that drove a 3× jump in inbound leads.</p>
+            <div class="work-chips">
+              <span class="chip">Strategy</span>
+              <span class="chip">Identity</span>
+              <span class="chip">Campaign</span>
+            </div>
+            <a href="#" class="work-link">
+              View Case Study
+              <i data-lucide="arrow-right" width="12" height="12"></i>
+            </a>
+          </div>
+        </div>
+
+        <div class="work-card reveal">
+          <div class="work-thumb">
+            <div class="work-thumb-inner">
+              <i data-lucide="trending-up" width="26" height="26"></i>
+            </div>
+          </div>
+          <div class="work-body">
+            <div class="work-cat">Growth Strategy</div>
+            <h3>Content Engine for B2B Tech Company</h3>
+            <p>Built a scalable content and SEO system from scratch — 0 to 40K monthly organic visits in 12 months, with a 5-person team running it.</p>
+            <div class="work-chips">
+              <span class="chip">SEO</span>
+              <span class="chip">Content</span>
+              <span class="chip">Operations</span>
+            </div>
+            <a href="#" class="work-link">
+              View Case Study
+              <i data-lucide="arrow-right" width="12" height="12"></i>
+            </a>
+          </div>
+        </div>
+
+        <div class="work-card reveal">
+          <div class="work-thumb">
+            <div class="work-thumb-inner">
+              <i data-lucide="megaphone" width="26" height="26"></i>
+            </div>
+          </div>
+          <div class="work-body">
+            <div class="work-cat">Go-to-Market</div>
+            <h3>Consumer App Launch Campaign</h3>
+            <p>Owned the full GTM strategy for a consumer app — messaging, channel strategy, and influencer partnerships that earned 50K users in 30 days.</p>
+            <div class="work-chips">
+              <span class="chip">GTM</span>
+              <span class="chip">Paid Media</span>
+              <span class="chip">Partnerships</span>
+            </div>
+            <a href="#" class="work-link">
+              View Case Study
+              <i data-lucide="arrow-right" width="12" height="12"></i>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════ EXPERIENCE ═════════════════════════════════════ -->
+  <section id="experience" class="s-dark">
+    <div class="container">
+      <div class="reveal">
+        <div class="s-label">Experience</div>
+        <h2 class="s-h" style="color:#EFF1F8;">Where I've built<br>things that mattered.</h2>
+      </div>
+
+      <div class="exp-list">
+
+        <div class="exp-row reveal">
+          <div class="exp-meta">
+            <div class="exp-period">2022 — Present</div>
+            <div class="exp-org">Primitive</div>
+          </div>
+          <div>
+            <div class="exp-role">Brand &amp; Strategy Lead</div>
+            <div class="exp-desc">
+              Leading brand, content, and growth marketing across a portfolio of clients.
+              Oversee a team of 6 creatives and strategists, manage agency relationships,
+              and own the narrative that connects client ambition to measurable market outcomes.
+            </div>
+            <div class="exp-chips">
+              <span class="exp-chip">Brand Strategy</span>
+              <span class="exp-chip">Team Leadership</span>
+              <span class="exp-chip">Content</span>
+              <span class="exp-chip">Client Management</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="exp-row reveal">
+          <div class="exp-meta">
+            <div class="exp-period">2019 — 2022</div>
+            <div class="exp-org">Agency / Freelance</div>
+          </div>
+          <div>
+            <div class="exp-role">Senior Brand Strategist</div>
+            <div class="exp-desc">
+              Partnered with early-stage startups and growing mid-market brands on
+              positioning, messaging, and creative direction across SaaS, fintech,
+              health, and consumer verticals.
+            </div>
+            <div class="exp-chips">
+              <span class="exp-chip">Positioning</span>
+              <span class="exp-chip">Creative Direction</span>
+              <span class="exp-chip">GTM</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="exp-row reveal">
+          <div class="exp-meta">
+            <div class="exp-period">2016 — 2019</div>
+            <div class="exp-org">In-House Role</div>
+          </div>
+          <div>
+            <div class="exp-role">Marketing Manager</div>
+            <div class="exp-desc">
+              Owned growth marketing for a scaling B2B software company. Built the first
+              content and SEO function from zero, and launched a partner marketing
+              program that became a top pipeline channel.
+            </div>
+            <div class="exp-chips">
+              <span class="exp-chip">SEO</span>
+              <span class="exp-chip">Demand Generation</span>
+              <span class="exp-chip">Analytics</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════ CONTACT ════════════════════════════════════════ -->
+  <section id="contact" class="s-light">
+    <div class="container">
+      <div class="reveal">
+        <div class="s-label">Get in Touch</div>
+        <h2 class="s-h">Let's build something<br>worth talking about.</h2>
+      </div>
+
+      <div class="cu-wrap reveal">
+
+        <div class="cu-left">
+          <div class="cu-left-inner">
+            <div class="ccc-tag">Reach Out</div>
+            <h3 class="ccc-h">Open to the right conversations.</h3>
+            <p class="ccc-sub">
+              Whether you have a project in mind, want to explore working together,
+              or just want to connect — I'd love to hear from you.
+            </p>
+            <div class="ccc-rows">
+              <a href="mailto:jeter@leadwithprimitive.com" class="ccc-row">
+                <div class="ccc-icon"><i data-lucide="mail" width="14" height="14"></i></div>
+                jeter@leadwithprimitive.com
+              </a>
+              <a href="#" class="ccc-row">
+                <div class="ccc-icon"><i data-lucide="linkedin" width="14" height="14"></i></div>
+                linkedin.com/in/jeter
+              </a>
+              <a href="#" class="ccc-row">
+                <div class="ccc-icon"><i data-lucide="file-down" width="14" height="14"></i></div>
+                Download Resume
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="cu-divider"></div>
+
+        <div class="cu-right">
+          <div class="contact-form">
+            <div class="fg">
+              <label>Your name</label>
+              <input type="text" placeholder="Alex Johnson">
+            </div>
+            <div class="fg">
+              <label>Email address</label>
+              <input type="email" placeholder="hello@company.com">
+            </div>
+            <div class="fg">
+              <label>Subject</label>
+              <input type="text" placeholder="Project inquiry, collaboration, etc.">
+            </div>
+            <div class="fg">
+              <label>Message</label>
+              <textarea placeholder="Tell me about what you're working on…"></textarea>
+            </div>
+            <button class="btn-submit">
+              Send Message
+              <i data-lucide="send" width="14" height="14"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════ FOOTER ══════════════════════════════════════════ -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <span class="footer-logo">Jeter.</span>
+        <span class="footer-copy">© 2026 — All rights reserved</span>
+        <a href="#hero" class="footer-top">
+          Back to top
+          <i data-lucide="arrow-up" width="13" height="13"></i>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ════ SCRIPTS ═════════════════════════════════════════ -->
+  <script>
+    lucide.createIcons();
+
+    // Theme
+    function toggleTheme() {
+      const html  = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      document.getElementById('ico-sun').style.display  = isDark ? 'block' : 'none';
+      document.getElementById('ico-moon').style.display = isDark ? 'none'  : 'block';
+    }
+
+    // Scroll reveal
+    const io = new IntersectionObserver(entries => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('in'), i * 55);
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -32px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    // Active nav pill — class-based
+    const secs = document.querySelectorAll('section[id]');
+    const nls  = document.querySelectorAll('.nav-links a');
+
+    function setActive(id) {
+      nls.forEach(l => {
+        l.classList.toggle('nav-active', l.getAttribute('href') === '#' + id);
+      });
+    }
+
+    secs.forEach(s => {
+      new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) setActive(e.target.id); });
+      }, { threshold: 0.4 }).observe(s);
+    });
+  </script>
+</body>
+</html>
+
