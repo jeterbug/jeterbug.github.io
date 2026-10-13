@@ -447,11 +447,12 @@ form{display:grid;gap:14px;min-width:0}
       <section id="experience" aria-labelledby="h-xp" class="reveal">
         <div class="sec-head"><span class="eyebrow">Experience</span><h2 id="h-xp">Nine years at Primitive</h2><p>A marketing and digital services agency with 30+ employees and 60+ active clients.</p></div>
         <ol class="xp">
-          <li class="reveal" style="--d:0"><span class="when">Nov 2025 – Now</span><div><h3>Director of Project Management</h3><p class="org">Primitive · Lead Project Manager from Jul 2024</p><p>I run delivery for 60+ clients (about $4M a year) and lead a team of 3 PMs. I also co-lead the company's 2026 billable utilization goal.</p></div></li>
-          <li class="reveal" style="--d:1"><span class="when">Nov 2022 – Jul 2024</span><div><h3>Lead Account Manager</h3><p class="org">Primitive</p><p>I managed 40 accounts worth about $1.14M a year and kept 95% of them year over year.</p></div></li>
-          <li class="reveal" style="--d:2"><span class="when">Sep 2020 – Nov 2022</span><div><h3>Senior Product Owner</h3><p class="org">Primitive · Product Owner until promoted</p><p>I owned the roadmap for 35 software and website projects and shipped about 70 releases, 90% on time.</p></div></li>
-          <li class="reveal" style="--d:3"><span class="when">Dec 2017 – Sep 2020</span><div><h3>Project Manager</h3><p class="org">Primitive</p><p>I delivered about 65 projects a year, 90% on time and on budget.</p></div></li>
-          <li class="reveal" style="--d:4"><span class="when">2013 – 2017</span><div><h3>Technical Director / A/V Coordinator</h3><p class="org">Redeemer Church · Indiana Avenue Baptist Church</p><p>I ran weekly live production and trained a volunteer crew of 20+.</p></div></li>
+          <li class="reveal" style="--d:0"><span class="when">Nov 2025 – Now</span><div><h3>Director of Project Management</h3><p class="org">Primitive</p><p>I lead the PM function across 60+ client engagements, manage the PM team, and own sprint standards, ClickUp architecture, and utilization analysis against the 80% company goal.</p></div></li>
+          <li class="reveal" style="--d:1"><span class="when">Jul 2024 – Nov 2025</span><div><h3>Lead Project Manager</h3><p class="org">Primitive</p><p>I built the PM department from zero, cut non-billable hours by over 20%, and built 9 AI agents that save the team 15+ hours a week.</p></div></li>
+          <li class="reveal" style="--d:2"><span class="when">Nov 2022 – Jul 2024</span><div><h3>Lead Account Manager</h3><p class="org">Primitive</p><p>I managed 40 accounts worth about $1.14M a year and kept 95% of them year over year.</p></div></li>
+          <li class="reveal" style="--d:3"><span class="when">Sep 2020 – Nov 2022</span><div><h3>Senior Product Owner</h3><p class="org">Primitive · Product Owner until promoted</p><p>I owned the roadmap for 35 software and website projects and shipped about 70 releases, 90% on time.</p></div></li>
+          <li class="reveal" style="--d:4"><span class="when">Dec 2017 – Sep 2020</span><div><h3>Project Manager</h3><p class="org">Primitive</p><p>I delivered about 65 projects a year, 90% on time and on budget.</p></div></li>
+          <li class="reveal" style="--d:5"><span class="when">2013 – 2017</span><div><h3>Technical Director &amp; A/V Coordinator</h3><p class="org">Redeemer Church &amp; Indiana Avenue Baptist Church</p><p>I ran weekly live production and trained a volunteer crew of 20+.</p></div></li>
         </ol>
       </section>
 
@@ -471,7 +472,7 @@ form{display:grid;gap:14px;min-width:0}
         <div class="skills-card" data-tilt="1.5">
           <div class="sec-head"><span class="eyebrow">Skills</span><h2 id="h-skills">What I bring</h2></div>
           <div class="skills">
-            <div class="reveal" style="--d:0"><h3>Project & program management</h3><ul><li>Portfolio and resource management</li><li>Capacity planning</li><li>Agile / Scrum</li><li>Scope, budget, and risk</li><li>PMO setup</li></ul></div>
+            <div class="reveal" style="--d:0"><h3>Project & program management</h3><ul><li>Portfolio and resource management</li><li>Capacity planning</li><li>Agile / Scrum</li><li>Scope, budget, and risk</li><li>Stakeholder management</li><li>PMO setup</li></ul></div>
             <div class="reveal" style="--d:1"><h3>Operations</h3><ul><li>Process improvement</li><li>Change management</li><li>KPI and utilization reporting</li><li>AI workflow automation</li><li>Hiring and team leadership</li></ul></div>
             <div class="reveal" style="--d:2"><h3>Tools</h3><ul><li>ClickUp and Claude</li><li>Jira and Asana</li><li>HubSpot</li><li>Google Workspace</li><li>Figma</li></ul></div>
           </div>
@@ -524,14 +525,14 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* ---------- board ---------- */
 const COLS=[{id:'progress',name:'In Progress',c:'var(--warn)'},{id:'review',name:'Review',c:'var(--review)'},{id:'shipped',name:'Shipped',c:'var(--ok)'}];
 const CARDS={
-  util:['i-target','2026 Billable Utilization','Co-leading the push to an 80% utilization target.'],
+  planning:['i-target','Work planning rebuild','Company-wide redesign of task setup and team communication.'],
   sentiment:['i-pulse','Client Sentiment Monitor','AI agent that flags at-risk accounts weekly. Saved a $16.6K/mo retainer.'],
   agents:['i-spark','9 delivery admin agents','Reports, time audits, and rollovers. 15+ hours a week saved.'],
   capacity:['i-gauge','Capacity planning rebuild','Cut non-billable hours by 20%+ across 19 people.'],
   web:['i-flow','Web delivery process','7 phases, 39 steps, 5 client approval gates.'],
   slack:['i-chat','Slack to ClickUp Chat','30+ staff moved in about 6 weeks.']
 };
-const DEFAULT={progress:['util'],review:['sentiment','agents'],shipped:['capacity','web','slack']};
+const DEFAULT={progress:['planning'],review:['sentiment','agents'],shipped:['capacity','web','slack']};
 const copy=o=>JSON.parse(JSON.stringify(o));
 const valid=s=>s&&COLS.every(c=>Array.isArray(s[c.id]))&&Object.keys(CARDS).every(k=>COLS.filter(c=>s[c.id].includes(k)).length===1);
 let state=null;try{state=JSON.parse(localStorage.getItem('jc-board3')||'null')}catch(e){}
