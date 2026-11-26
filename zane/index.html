@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="robots" content="noindex,nofollow">
 <meta name="description" content="Zane's Quest, a one-off gift game.">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Zane's Quest</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -287,6 +287,13 @@ table.ctl td:first-child{color:var(--mut)}
 #tgA .b{height:4px;background:rgba(0,0,0,.6);box-shadow:0 0 0 1px rgba(0,0,0,.4)}#tgA .b i{display:block;height:100%;background:var(--acc);transition:width .1s}
 #rlw{top:calc(50% + 24px);width:60px;height:3px;border:none;background:rgba(255,255,255,.18)}
 #ahint{top:calc(50% + 34px);font-weight:700;font-size:10px;letter-spacing:.25em}
+#hpA{top:auto;bottom:32px;width:min(560px,42vw)}
+#hpA .lb{font-size:13px;margin-bottom:8px}#hpA .lb b{font:14px 'Press Start 2P';letter-spacing:.04em}
+#hpA .hb{height:16px;clip-path:polygon(9px 0,100% 0,calc(100% - 9px) 100%,0 100%)}
+#bossbar{top:22px}
+#tabnote{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:20;display:none;font:600 13px 'Chakra Petch',sans-serif;letter-spacing:.12em;color:#ddd;background:rgba(0,0,0,.8);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);padding:12px 20px;white-space:nowrap;pointer-events:none}
+#tabnote.on{display:block}#tabnote b{color:var(--acc);font-weight:700}
+html,body{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 /* ===== MENUS ===== */
 .pickhd{margin-bottom:26px}.pickhd .kick{font:700 12px 'Chakra Petch',sans-serif;letter-spacing:.5em;color:var(--acc)}
 .pickhd h2{font-size:min(3.4vw,34px);margin:14px 0 0;letter-spacing:.06em;text-shadow:0 4px 0 #000}
@@ -361,9 +368,13 @@ table.ctl td:first-child{color:var(--mut)}
   <div id="tgA"><div class="t" id="tgAn"></div><div class="b"><i id="tgAf"></i></div></div>
   <div id="wp"><div id="wname"></div><div id="ammo"><b id="mag"></b><span id="res"></span></div><div id="slots"></div></div>
 </div>
-<div id="cinebars"><i></i><i></i><div id="cinecap"></div></div><div id="introblk"></div><div id="helpbub">HELP!</div><div id="mobblk"><h1 class="cine">ZANE'S<br>QUEST</h1><p>This game needs a <span style="color:#ff6a2e">desktop or laptop</span>.</p><p class="m">Open this link on a computer with a keyboard and mouse (or a controller) to play.</p></div>
+<div id="cinebars"><i></i><i></i><div id="cinecap"></div></div><div id="introblk"></div><div id="helpbub">HELP!</div><div id="tabnote">Connect a <b>controller</b> or a <b>mouse + keyboard</b> to play</div><div id="mobblk"><h1 class="cine">ZANE'S<br>QUEST</h1><p>This game needs a <span style="color:#ff6a2e">desktop or laptop</span>.</p><p class="m">Open this link on a computer with a keyboard and mouse (or a controller) to play.</p></div>
 <script>(function(){try{const mm=q=>window.matchMedia&&matchMedia(q).matches;const touch=mm('(pointer:coarse)')&&!mm('(any-pointer:fine)'),ua=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-  if(touch||ua)document.getElementById('mobblk').classList.add('on');}catch(e){}})();</script>
+  const sm=Math.min(screen.width,screen.height),phone=/iPhone|iPod/i.test(navigator.userAgent)||(/Android/i.test(navigator.userAgent)&&/Mobile/i.test(navigator.userAgent))||((touch||ua)&&sm<600);
+  if(phone){document.getElementById('mobblk').classList.add('on');return;}
+  if(touch||ua){const n=document.getElementById('tabnote');n.classList.add('on');const off=()=>n.classList.remove('on');
+    addEventListener('gamepadconnected',off);addEventListener('pointermove',e=>{if(e.pointerType==='mouse')off();});addEventListener('keydown',off);
+    try{for(const g of navigator.getGamepads?navigator.getGamepads():[])if(g)off();}catch(e){}}}catch(e){}})();</script>
 <div id="overlay"></div>
 <div id="ed" class="hidden"></div>
 
