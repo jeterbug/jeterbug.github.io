@@ -294,6 +294,7 @@ table.ctl td:first-child{color:var(--mut)}
 #tabnote{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:20;display:none;font:600 13px 'Chakra Petch',sans-serif;letter-spacing:.12em;color:#ddd;background:rgba(0,0,0,.8);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);padding:12px 20px;white-space:nowrap;pointer-events:none}
 #tabnote.on{display:block}#tabnote b{color:var(--acc);font-weight:700}
 html,body{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.playing,body.playing *{cursor:none!important}
 /* ===== MENUS ===== */
 .pickhd{margin-bottom:26px}.pickhd .kick{font:700 12px 'Chakra Petch',sans-serif;letter-spacing:.5em;color:var(--acc)}
 .pickhd h2{font-size:min(3.4vw,34px);margin:14px 0 0;letter-spacing:.06em;text-shadow:0 4px 0 #000}
@@ -2636,7 +2637,8 @@ function grenDraw(){if(G.booms&&G.booms.length){for(const b of G.booms){const t=
   if(!G.grens||!G.grens.length)return;if(!MESH.gren)MESH.gren=gunMesh(GREN_M);
   for(const g of G.grens){const R=rotM(g.rx,g.rz,0),fl=g.t>1.2&&((g.t*16)|0)%2;boxR(g.x,g.y,g.z,.34,.34,.34,R,WHITE,fl?[.5,.25,.05]:[.02,.02,.02],TILE.grit,.06,false,MESH.gren);}}
 const TGN=Object.assign({},ENAME,{grunt:'ZOMBIE',spitter:'GHOUL',bomber:'BLOATER'});let abKey='',tgE=null,tgT=0,hpG=1;
-function hudA(s){
+function hudA(s){document.body.classList.toggle('playing',G.state==='play');
+
   const hf=clamp(P.hp/s.maxHp,0,1);$('hpAf').style.width=hf*100+'%';hpG=Math.max(hf,hpG-(1/60)*.35);if(hpG<hf)hpG=hf;$('hpAg').style.width=hpG*100+'%';
   $('hpAt').textContent=Math.ceil(P.hp)+' / '+s.maxHp;$('hpA').classList.toggle('low',hf<.25);
   const k=(G.vapeOn?1:0)+'|'+s.dashMax+'|'+GREN_N;
@@ -2790,7 +2792,13 @@ function resume(){hide();G.state='play';lock();}
 function toTitle(){G.state='title';amb(null);SW.on=false;SW.state='';releaseLock();G.runSeed=0;G.custom=null;buildRoom(1);titleScreen();}
 
 /* ================= input ================= */
-function lock(){try{const r=canvas.requestPointerLock&&canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{});}catch(e){}}
+const TABLET=/iPad|Android/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function fsOn(){return !!(document.fullscreenElement||document.webkitFullscreenElement);}
+function goFS(){if(!TABLET||fsOn())return;const d=document.documentElement;try{const r=(d.requestFullscreen||d.webkitRequestFullscreen||(()=>{})).call(d);if(r&&r.catch)r.catch(()=>{});}catch(e){}}
+function lock(){goFS();try{const r=canvas.requestPointerLock&&canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{});}catch(e){}}
+['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{if(fsOn()&&G.state==='play'&&!locked)setTimeout(lock,60);}));
+canvas.addEventListener('click',()=>{if(G.state==='play'&&!locked)lock();});
+document.addEventListener('pointerlockerror',()=>{if(G.state==='play'&&TABLET)toast('CLICK THE SCREEN TO CAPTURE THE MOUSE','#ff6a2e');});
 function releaseLock(){try{if(document.pointerLockElement)document.exitPointerLock();}catch(e){}}
 document.addEventListener('pointerlockchange',()=>{const was=locked;locked=document.pointerLockElement===canvas;if(was&&!locked&&G.state==='play')pause();});
 canvas.addEventListener('mousedown',e=>{if(G.state==='edit'){E.mx=e.clientX;E.my=e.clientY;if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();if(e.button===2)E.rot=true;else if(e.button===0){E.cur=edRay(E.mx,E.my);edClick();}return;}if(G.state!=='play')return;if(!locked)lock();if(e.button===0)firing=true;if(e.button===2){if(SET.adsToggle)P.adsOn=!P.adsOn;else P.adsHeld=true;}});
