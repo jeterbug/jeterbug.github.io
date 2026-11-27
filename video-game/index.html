@@ -1072,7 +1072,7 @@ function vent(){if(G.vented)return;G.vented=1;G.overheat=Math.min(G.overheat,VEN
 const WEAP={
   rifle:{id:'rifle',name:'AUTO RIFLE',key:1,mag:30,max:210,start:150,dmg:13,rate:.1,reload:1.6,pellets:1,spread:.014,speed:85,life:1.1,pierce:0,size:.11,kz:.05,kp:.06,punch:.006,adsFov:64,snd:'shoot',head:2},
   shotgun:{id:'shotgun',name:'SAWED-OFF',key:2,mag:2,max:40,start:20,dmg:15,rate:.3,reload:1.15,pellets:9,spread:.145,speed:70,life:.44,pierce:0,size:.075,knock:2,kz:.13,kp:.4,punch:.06,adsFov:72,snd:'shotgun',head:1.5},
-  cannon:{id:'cannon',name:'HAND CANNON',key:3,mag:6,max:42,start:24,dmg:80,rate:.5,reload:2.1,pellets:1,spread:0,speed:120,life:1.2,pierce:1,size:.2,knock:3.5,kz:.15,kp:.7,punch:.13,adsFov:86,snd:'cannon',head:2.5},
+  cannon:{id:'cannon',name:'HAND CANNON',key:3,mag:6,max:42,start:24,dmg:80,rate:.5,reload:1.7,pellets:1,spread:0,speed:120,life:1.2,pierce:1,size:.2,knock:3.5,kz:.15,kp:.7,punch:.13,adsFov:72,snd:'cannon',head:2.5},
 };
   const BLHIP=typeof BLADE_D!=='undefined'?BLADE_D.pose.hip:[.36,-.38,-.72];
   WEAP.blade={id:'blade',name:'ELF BLADE',key:4,mag:1,max:0,start:0,dmg:60,rate:.46,reload:1,pellets:0,spread:0,speed:0,life:0,pierce:0,size:0,kz:0,kp:0,punch:0,adsFov:88,snd:'bswing',head:1,melee:true,range:3.6,arc:1.0};
@@ -2106,9 +2106,9 @@ function vmAnim(vm,id){vm=Object.assign({},vm,{lh:castLH(vm)});const r={gp:0,gr:
   else if(id==='shotgun'){r.gp=bell*.28;r.gr=bell*.2;r.brl=-.75*(win01(t,.08,.2)-win01(t,.8,.86));
     r.lh=kf([[0,vm.lh],[.15,vm.lh],[.38,DOWN],[.58,[0,.0,-.1]],[.72,[0,.0,-.1]],[.86,vm.lh],[1,vm.lh]],t);
     if(t>=.38&&t<.66)r.handItem='shells';}
-  else{r.gr=-bell*.5;r.gp=bell*.2;const out=win01(t,.08,.18)-win01(t,.82,.9);r.cylX=-.15*out;r.cylRoll=t*14;
-    r.lh=kf([[0,vm.lh],[.14,[-.15,.03,-.25]],[.28,[-.15,.03,-.2]],[.45,DOWN],[.66,[-.15,.01,-.02]],[.78,[-.15,.01,-.06]],[.92,vm.lh],[1,vm.lh]],t);
-    if(t>=.45&&t<.72)r.handItem='loader';}
+  else{r.gr=-bell*.5;r.gp=bell*.2;r.cylX=-.12*(win01(t,.06,.18)-win01(t,.62,.74)); // swing the cylinder out, drop it, raise a fresh one, swing it home
+    if(t<.42){const f=win01(t,.2,.42);r.cylY=-.55*f*f;r.cylPit=f*2.2;r.cylRoll=t*6;}else{const u=1-win01(t,.44,.62);r.cylY=-.4*u*u;r.cylPit=-u*1.2;r.cylRoll=8+win01(t,.7,.9)*10;}
+    if(t>.405&&t<.44)r.cylHide=true;}
   return r;}
 const GD={rifle:{p:[-.105,.02,.05],r:[-.9,0,0],w:.16,h:.09,dh:.055},shotgun:{p:[0,.222,-.6],r:[0,-1.25,0],w:.11,h:.072,dh:.048}};
 const SEG7=[0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f];
@@ -2142,7 +2142,7 @@ function drawViewmodel(cx,cy,cz,Rcam){
     const pv=vm.pivot,Rb=rotM(0,an.brl,0),q=mv3(Rb,[-pv[0],-pv[1],-pv[2]]),b=toW([pv[0]+q[0],pv[1]+q[1],pv[2]+q[2]]);
     boxR(b[0],b[1],b[2],1,1,1,mul3(RW,Rb),WHITE,[.012,.014,.016],TILE.grit,.06,false,MESH.sgBrl);const bq=mv3(Rb,pv);gunDisp(toW,RW,'shotgun',{R:Rb,t:[pv[0]-bq[0],pv[1]-bq[1],pv[2]-bq[2]]});}
   if(vm.model==='rv'){const o=toW([0,0,0]);if(MESH.rvBody)boxR(o[0],o[1],o[2],1,1,1,RW,WHITE,[.012,.014,.016],TILE.grit,.06,false,MESH.rvBody);gunDisp(toW,RW,'cannon',null);
-    if(MESH.rvCyl){const c=toW([vm.cyl[0]+an.cylX,vm.cyl[1],vm.cyl[2]]);boxR(c[0],c[1],c[2],1,1,1,mul3(RW,rotM(0,0,an.cylRoll)),WHITE,[.012,.014,.016],TILE.grit,.06,false,MESH.rvCyl);}}
+    if(MESH.rvCyl&&!an.cylHide){const c=toW([vm.cyl[0]+an.cylX,vm.cyl[1]+(an.cylY||0),vm.cyl[2]]);boxR(c[0],c[1],c[2],1,1,1,mul3(RW,rotM(0,an.cylPit||0,an.cylRoll)),WHITE,[.012,.014,.016],TILE.grit,.06,false,MESH.rvCyl);}}
   if(vm.model==='blade')(SW.on?drawFang:drawBlade)(toW,RW,cx,cy,cz,Rcam);
   if(vm.model==='scar'){const o=toW(AGx?AGx.t:[0,0,0]),K=vm.k;boxR(o[0],o[1],o[2],K,K,K,AGx?mul3(RW,AGx.R):RW,WHITE,[.012,.022,.024],TILE.grit,.06,false,MESH.scar);
     
