@@ -3217,7 +3217,8 @@ function helpScreen(){const r=(a,b)=>`<div><span>${a}</span><em>${b}</em></div>`
   <div class="grp">CONTROLLER</div><div class="ctab">${r('Fire / aim','RT · LT')}${r('Jump · dash','A · B')}${r('Reload','X')}${r('Switch weapon','Y · RB')}${r('Arcane Bomb','LB')}${r('Emberfall · heal','D-PAD UP · DOWN')}${r('Pause','START')}</div>
   <div class="grp">THE RUN</div><p>Kill <b>${EMBER_NEED} enemies</b> to charge <b>Emberfall</b>: a burning greatsword with 3 strikes that send fire waves through the arena.</p>
   <p>After each room, choose a <b>boon</b>. Boons stack up to level III and pair into <b>synergies</b>. The strongest carry a <b>drawback</b>.</p>
-  <p>Glowing enemies are winding up an attack: dash out. Red arcs show where damage came from. Yellow arrows warn of incoming fire. Firing builds <b>mana heat</b>; let it cool or press R to vent a misfire.</p></div>
+  <p>Glowing enemies are winding up an attack: dash out. Red arcs show where damage came from. Yellow arrows warn of incoming fire. Firing builds <b>mana heat</b>; let it cool or press R to vent a misfire.</p>
+  <div class="grp">PLAYTEST STATS</div><p>On jetercotton.com the game sends <b>anonymous</b> gameplay stats (rooms, deaths, boons, weapons, frame rate) to help balance it. No names or personal info. Turn it off any time in <b>Settings · Gameplay · Share playtest stats</b>.</p></div>
   <div class="ft"><span>BUILT FOR MOUSE + KEYBOARD OR A CONTROLLER</span><span><button class="bt" data-back onclick="titleScreen()">BACK</button></span></div></div>`,false,'dimx');}
 function creditsScreen(){show(`<div class="pnl one" style="height:auto;max-height:90vh"><div class="hd"><h2>CREDITS</h2></div><div class="body"><p>COUSIN QUEST · a wizards &amp; guns roguelite.</p><p style="color:var(--mut)">Built for keyboard + mouse on a computer.<br>Click the game to capture your mouse.<br>Rifle model based on "SCAR-H" by DelthorGames (sketchfab.com/DelthorGames), CC BY 4.0.<br>Hand cannon model based on "Sci-Fi Pistol" by Vijaysarathi (sketchfab.com/vjprojects2020), CC BY 4.0.</p></div>
   <div class="ft"><span></span><span><button class="bt" data-back onclick="titleScreen()">BACK</button></span></div></div>`,false,'dimx');}
@@ -3268,6 +3269,7 @@ const SDEF=[
  ['gameplay','COMBAT','dmgNums','Damage numbers','seg',OF,'Numbers that pop off enemies when you hit them.'],
  ['access','COMFORT','calm','Reduce flashing','seg',OF,'Softens screen flashes, strobes and pulsing effects.'],
  ['access','COMFORT','shake','Screen shake','rng',[0,1,'%'],'How much the camera shakes from hits, blasts and recoil.'],
+ ['gameplay','PRIVACY','stats','Share playtest stats','seg',OF,'Only on jetercotton.com: sends anonymous gameplay stats (rooms, deaths, boons, weapons, frame rate) to help balance the game. No names, hero names or personal info, just a random ID for this browser. Turn OFF to stop sending.'],
  ['dev','TESTING','allGuns','Start with all guns','seg',OF,'Every run starts with all weapons. For testing.'],
 ];
 function setTab(d){const i=STABS.findIndex(t=>t[0]===(G.setTab||'controls'));G.setTab=STABS[(i+d+STABS.length)%STABS.length][0];settingsScreen(G.setBack,false);}
@@ -3470,7 +3472,7 @@ addEventListener('keyup',e=>{keys[e.code]=false;});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;firing=false;P.adsHeld=false;});
 
 /* ================= settings ================= */
-const SET={aim:1,adsToggle:false,sens:1,padSens:1,invertY:false,shake:1,calm:false,assist:true,crtOn:true,crt:.45,res:'MEDIUM',allGuns:false,dmgNums:true,samples:true,vol:1,amb:.6,mus:.6,gobHD:true,gobGrit:.7,gobPix:256,tracers:true};
+const SET={aim:1,adsToggle:false,sens:1,padSens:1,invertY:false,shake:1,calm:false,assist:true,crtOn:true,crt:.45,res:'MEDIUM',allGuns:false,dmgNums:true,samples:true,vol:1,amb:.6,mus:.6,gobHD:true,gobGrit:.7,gobPix:256,tracers:true,stats:true};
 try{const sv=JSON.parse(localStorage.getItem('rogueproto.settings')||'{}');for(const k in SET)if(k in sv)SET[k]=sv[k];if(!('aim' in sv)&&sv.assist===false)SET.aim=0;if(typeof SET.shake==='boolean')SET.shake=SET.shake?1:0;}catch(e){}
 function saveSet(){try{localStorage.setItem('rogueproto.settings',JSON.stringify(SET));}catch(e){}applyCrt();}
 function cycleSet(k,L){SET[k]=L[(L.indexOf(SET[k])+1)%L.length];saveSet();settingsScreen(G.setBack,true);}
@@ -3909,6 +3911,73 @@ if(!gl){show('<h2>WebGL unavailable</h2><p class="sub">This browser could not st
 else if(window.IS_PHONE){}else{try{initGL();G.ammo={rifle:{mag:30,res:150}};buildRoom(1);heroScreen();requestAnimationFrame(frame);}
   catch(err){show('<h2>Could not start</h2><p class="sub">'+String(err.message||err).slice(0,200)+'</p>');}}
 window.__MOCK=MOCK;window.__dbg={ORC,ORCATK,orcAI,orcPose,SL,SLQ,SLCOL,slimeBurst,slPose,WEAP,BLD,bladePose,bladeLoad,MON,MONATK,MONR,monAI,monPose,SK,SKA,SKQ,makePiles,skPose,skCorpse,RAISE,bossRaise,wrCorpse,WRDEATH,WR,WRQ,wrPose,GA,GOBA,spawnDancer,danceUpd,gobCorpse,damage,CLUB,CLUBQ,GOB,GOBQ,MOCK,gobPose,SW,activateSword,VMA,E,openEditor,closeEditor,edClick,edRebuild,edPick,edRay,edPlay,edNew,edUndo,edDelete,sanitizeMap,buildFromMap,withSeed,eshoot,showPick,kill,bulletHit,hurt,hitStop,mulberry,adsRatio,G,P,S,PAD,SET,pollPad,drawIndicators,update,startRun,choose,buildRoom,makeEnemy,render,hud,dash,jump,switchTo,startReload,tryFire,keys,setFiring:v=>firing=v};
+
+/* ================= v87 anonymous playtest analytics (Supabase cq_events) ================= */
+const CQA={on:/(^|\.)jetercotton\.com$/i.test(location.hostname),url:(typeof LQURL!=='undefined'?LQURL:''),key:(typeof LQKEY!=='undefined'?LQKEY:''),
+  v:'v87',q:[],sending:false,pid:'',sid:'',run:null,fr:{n:0,sum:0,max:0,slow:0,en:0,enMax:0,t0:0,last:0},flushT:0};
+try{CQA.pid=localStorage.getItem('cousinquest.pid')||'';if(!/^[a-z0-9]{12,24}$/.test(CQA.pid)){CQA.pid=(Math.random().toString(36).slice(2)+Date.now().toString(36)).slice(0,16).padEnd(12,'0');localStorage.setItem('cousinquest.pid',CQA.pid);}}catch(e){CQA.pid='anon'+Math.random().toString(36).slice(2,12);}
+CQA.sid=Math.random().toString(36).slice(2,12);
+CQA.dev=(()=>{const ua=navigator.userAgent;return /iPhone|iPod|Android.*Mobile/i.test(ua)?'phone':(typeof TABLET!=='undefined'&&TABLET)?'tablet':'desktop';})();
+function cqaLive(){return CQA.on&&SET.stats!==false&&!!CQA.url&&!!CQA.key;}
+function cqaBoons(){const o={};for(const k in G.lv)if(G.lv[k])o[k]=G.lv[k];return o;}
+function cqaMode(){return G.custom?'custom':(G.ranked?(SET.allGuns?'allguns':'normal'):'test');}
+function cqaEv(ev,d,room){try{if(!cqaLive())return;CQA.q.push({at:new Date().toISOString(),pid:CQA.pid,sid:CQA.sid,rid:CQA.run?CQA.run.id:null,ev,room:room===undefined?(G.room|0):room,v:CQA.v,dev:CQA.dev,d:d||{}});
+  if(CQA.q.length>400)CQA.q.splice(0,CQA.q.length-400);if(CQA.q.length>=30)cqaFlush();}catch(e){}}
+function cqaFlush(unload){if(!cqaLive()||!CQA.q.length||(CQA.sending&&!unload))return;const batch=CQA.q.splice(0,60);let body;try{body=JSON.stringify(batch);}catch(e){return;}
+  CQA.sending=true;const done=ok=>{CQA.sending=false;if(!ok&&!unload){CQA.q=batch.concat(CQA.q).slice(-400);}else if(CQA.q.length&&!unload)setTimeout(cqaFlush,500);};
+  try{fetch(CQA.url+'/rest/v1/cq_events',{method:'POST',keepalive:body.length<60000,headers:{apikey:CQA.key,'Content-Type':'application/json',Prefer:'return=minimal'},body})
+    .then(r=>done(r.ok||(r.status>=400&&r.status<500&&r.status!==401&&r.status!==429))).catch(()=>done(false));}catch(e){done(false);}}
+function cqaRunEnd(res){const R=CQA.run;if(!R||R.ended)return;R.ended=1;
+  cqaEv('run_end',{res,mode:R.mode,secs:Math.round(G.runTime||0),kills:G.kills|0,shots:G.shots|0,hits:G.hits|0,hp:Math.max(0,Math.round(P.hp)),guns:G.gunShots||{},gk:R.gk,boons:cqaBoons(),weapons:(G.weapons||[]).slice(),seed:G.runSeed|0,cause:res==='dead'?(G.lastHit||''):undefined});cqaFlush();}
+(function(){
+  const _startRun=startRun;startRun=function(seed,room){if(CQA.run&&!CQA.run.ended&&G.runSeed)cqaRunEnd('quit');const r=_startRun.apply(this,arguments);
+    try{CQA.run={id:Math.random().toString(36).slice(2,12),mode:cqaMode(),gk:{},room:0,rt:0,hp0:P.hp,k0:0,dmg:0};cqaEv('run_start',{tune:(typeof CQT!=='undefined'?CQT.id:0),mode:CQA.run.mode,seed:G.runSeed|0,start:room>1?room:1,input:PAD.connected?'pad':(CQA.dev==='desktop'?'kbm':'touch'),res:SET.res,hd:!!SET.gobHD,aim:SET.aim});
+      if(room>1)cqaRoom();}catch(e){}return r;};
+  function cqaRoom(){const R=CQA.run;if(!R||R.ended||R.room===G.room)return;R.room=G.room;R.rt=G.runTime;R.hp0=P.hp;R.k0=G.kills;R.dmg=0;R.s0=G.shots;cqaEv('room_start',{hp:Math.round(P.hp),boons:cqaBoons(),weapons:(G.weapons||[]).slice()});}
+  const _ri=roomIntro;roomIntro=function(){const r=_ri.apply(this,arguments);try{cqaRoom();}catch(e){}return r;};
+  const _bi=bossIntro;bossIntro=function(){const r=_bi.apply(this,arguments);try{cqaRoom();}catch(e){}return r;};
+  const _rc=roomClear;roomClear=function(){try{const R=CQA.run;if(R&&!R.ended)cqaEv('room_clear',{secs:Math.round(G.runTime-R.rt),hp:Math.round(P.hp),dmg:Math.round(R.dmg),kills:G.kills-R.k0,shots:G.shots-(R.s0||0)});}catch(e){}return _rc.apply(this,arguments);};
+  const _ch=choose;choose=function(id){let ok=false,opts=null,lv=0;try{ok=G.state==='pick'&&G.pickOpts.includes(id);opts=ok?G.pickOpts.slice():null;lv=(G.lv[id]||0);}catch(e){}
+    const r=_ch.apply(this,arguments);try{if(ok&&CQA.run&&!CQA.run.ended)cqaEv('boon',{id,lv:ABIL[id]&&ABIL[id].weapon?0:lv+1,weapon:!!(ABIL[id]&&ABIL[id].weapon),opts});}catch(e){}return r;};
+  const _hurt=hurt;hurt=function(n,sx,sz,src){const hp=P.hp;CQA.hurtHp=hp;let r;try{r=_hurt.apply(this,arguments);}finally{CQA.hurtHp=null;}try{if(CQA.run&&P.hp<hp)CQA.run.dmg+=hp-Math.max(0,P.hp);}catch(e){}return r;};
+  const _kill=kill;kill=function(e){const was=e&&e.dead;const r=_kill.apply(this,arguments);try{if(!was&&e&&e.dead&&CQA.run&&!CQA.run.ended){const w=G.weapons[G.cur]||'?';CQA.run.gk[w]=(CQA.run.gk[w]||0)+1;}}catch(x){}return r;};
+  const _rs=recStats;recStats=function(win){const res=win?'win':(G.state==='pause'?'quit':'dead');
+    try{if(res==='dead'&&CQA.run&&!CQA.run.ended){const R=CQA.run,c=G.lastHit||'THE DARK',ty=Object.keys(ENAME).find(k=>ENAME[k]===c)||(c==='CLUB GOBLIN'?'grunt':'other');
+      cqaEv('death',{cause:c,enemy:ty,weapon:G.weapons[G.cur]||'',secs:Math.round(G.runTime-R.rt),run:Math.round(G.runTime),dmg:Math.round(R.dmg+(CQA.hurtHp!=null?CQA.hurtHp-Math.max(0,P.hp):0)),alive:G.enemies.filter(e=>!e.dead).length,boons:cqaBoons()});}
+      if(G.runSeed)cqaRunEnd(res);}catch(e){}return _rs.apply(this,arguments);};
+})();
+
+/* ================= v87 live tuning (pushed from the playtest dashboard; jetercotton.com only) ================= */
+const CQT={id:0,cfg:{},run:{}},CQT_W0={};for(const k of ['rifle','shotgun','cannon'])if(WEAP[k])CQT_W0[k]=WEAP[k].dmg;
+const cqtM=(o,k)=>{const v=o&&+o[k];return v>0?Math.max(.5,Math.min(1.5,v)):1;};
+try{const c=JSON.parse(localStorage.getItem('cousinquest.tuning')||'null');if(c&&c.cfg&&CQA.on){CQT.id=c.id|0;CQT.cfg=c.cfg;}}catch(e){}
+function cqtApplyRun(){CQT.run=CQT.cfg||{};for(const k in CQT_W0)WEAP[k].dmg=CQT_W0[k]*cqtM(CQT.run.wdmg,k);}
+function cqtLowRes(){try{const L=CQT.cfg.lowres;if(Array.isArray(L)&&L.includes(CQA.dev)&&!localStorage.getItem('cousinquest.resPicked')&&SET.res!=='CHUNKY'){SET.res='CHUNKY';resize();}}catch(e){}}
+if(CQA.on&&CQA.url){cqtLowRes();try{fetch(CQA.url+'/rest/v1/cq_tuning?select=id,cfg&active=is.true&order=id.desc&limit=1',{headers:{apikey:CQA.key}}).then(r=>r.ok?r.json():null).then(a=>{if(!Array.isArray(a))return;
+  const t=a[0]||{id:0,cfg:{}};CQT.id=t.id|0;CQT.cfg=(t.cfg&&typeof t.cfg==='object')?t.cfg:{};try{localStorage.setItem('cousinquest.tuning',JSON.stringify({id:CQT.id,cfg:CQT.cfg}));}catch(e){}cqtLowRes();}).catch(()=>{});}catch(e){}}
+(function(){
+  const _cr=cycleRes;cycleRes=function(){try{localStorage.setItem('cousinquest.resPicked','1');}catch(e){}return _cr.apply(this,arguments);};
+  const _ss=setSeg;setSeg=function(k){if(k==='res')try{localStorage.setItem('cousinquest.resPicked','1');}catch(e){}return _ss.apply(this,arguments);};
+  const _me=makeEnemy;makeEnemy=function(t,x,z){const e=_me.apply(this,arguments);try{const m=cqtM(CQT.run.hp,String(G.room));if(e&&m!==1){e.hp*=m;e.max=e.hp;}}catch(x){}return e;};
+  const _aw=autoWaves;autoWaves=function(n,boss){const w=_aw.apply(this,arguments);try{const m=cqtM(CQT.run.count,String(n));if(boss||m===1||!w.length)return w;
+      const all=w.flat(),want=Math.max(3,Math.round(all.length*m));if(want<all.length){let cut=all.length-want;for(let i=w.length-1;i>=0&&cut>0;i--)while(w[i].length>1&&cut>0){w[i].pop();cut--;}}
+      else for(let i=all.length;i<want;i++)w[w.length-1].push(all[i%all.length]);}catch(e){}return w;};
+  const _h=hurt;hurt=function(n,sx,sz,src){try{const ty=src==='CLUB GOBLIN'?'grunt':src==='A SLIME BURST'?'bomber':(Object.keys(ENAME).find(k=>ENAME[k]===src)||'other');n*=cqtM(CQT.run.dmg,ty);}catch(e){}return _h.call(this,n,sx,sz,src);};
+  const _sr=startRun;startRun=function(){cqtApplyRun();return _sr.apply(this,arguments);};
+})();
+/* sampled performance: avg / worst frame time + enemy count, every 5 s of play */
+function cqaFrame(now){requestAnimationFrame(cqaFrame);const F=CQA.fr,dt=F.last?now-F.last:0;F.last=now;
+  if(!cqaLive()||G.state!=='play'||document.hidden||dt<=0||dt>1000){F.t0=0;return;}
+  if(!F.t0){F.t0=now;F.n=0;F.sum=0;F.max=0;F.slow=0;F.en=0;F.enMax=0;F.room=G.room;return;}
+  F.n++;F.sum+=dt;if(dt>F.max)F.max=dt;if(dt>34)F.slow++;const ec=G.enemies.length;F.en+=ec;if(ec>F.enMax)F.enMax=ec;
+  if(now-F.t0>=5000||F.room!==G.room){if(F.n>=20)cqaEv('perf',{avg:+(F.sum/F.n).toFixed(1),worst:Math.round(F.max),slow:+(F.slow/F.n).toFixed(3),en:+(F.en/F.n).toFixed(1),enMax:F.enMax,res:SET.res,hd:!!SET.gobHD,w:innerWidth,h:innerHeight},F.room);F.t0=0;}}
+if(CQA.on){requestAnimationFrame(cqaFrame);
+  setInterval(()=>cqaFlush(),20000);
+  const bye=()=>{try{if(CQA.run&&!CQA.run.ended&&G.runSeed&&(G.state==='play'||G.state==='pause'||G.state==='pick'))cqaRunEnd('close');}catch(e){}cqaFlush(true);if(CQA.q.length)cqaFlush(true);};
+  addEventListener('pagehide',bye);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')cqaFlush(true);});
+  setTimeout(()=>{cqaEv('session',{dev:CQA.dev,cores:navigator.hardwareConcurrency||0,mem:navigator.deviceMemory||0,dpr:+(devicePixelRatio||1).toFixed(2),w:screen.width,h:screen.height,touch:navigator.maxTouchPoints>0,pad:!!PAD.connected,res:SET.res},0);
+    try{if(SET.stats!==false&&!localStorage.getItem('cousinquest.statsNote')){localStorage.setItem('cousinquest.statsNote','1');toast('ANONYMOUS PLAYTEST STATS ON · SETTINGS › GAMEPLAY TO TURN OFF','#6fd8d0');}}catch(e){}},1500);}
+
 </script>
 </body>
 </html>
