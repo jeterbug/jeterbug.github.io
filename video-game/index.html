@@ -2897,7 +2897,7 @@ function helpScreen(){const r=(a,b)=>`<div><span>${a}</span><em>${b}</em></div>`
 function creditsScreen(){show(`<div class="pnl one" style="height:auto;max-height:90vh"><div class="hd"><h2>CREDITS</h2></div><div class="body"><p>COUSIN QUEST · a wizards &amp; guns roguelite.</p><p style="color:var(--mut)">Built for keyboard + mouse on a computer.<br>Click the game to capture your mouse.<br>Rifle model based on "SCAR-H" by DelthorGames (sketchfab.com/DelthorGames), CC BY 4.0.<br>Greatsword model based on "UTRM 3.0 Sword" by Elite Big Speakerman (sketchfab.com/EvesStudio2008), CC BY 4.0.<br>Hand cannon model based on "Sci-Fi Pistol" by Vijaysarathi (sketchfab.com/vjprojects2020), CC BY 4.0.</p></div>
   <div class="ft"><span></span><span><button class="bt" onclick="titleScreen()">BACK</button></span></div></div>`,false,'dimx');}
 function startRun(seed,room){G.bombCd=0;G.bombPend=0;G.bombNoT=0;G.healCd=0;G.healPend=0;G.healNoT=0;G.healFx=0;G.runSeed=(typeof seed==='number'&&seed>0)?seed:1+Math.floor(Math.random()*999999);G.lastHit=null;G.stopT=0;ensureAudio();P.hits=[];P.adsOn=false;G.heat=0;G.lv={};G.weapons=['rifle'];G.cur=0;G.prev=0;G.ammo={rifle:{mag:30,res:WEAP.rifle.start}};if(SET.allGuns||room>1)for(const id of ['shotgun','cannon']){G.weapons.push(id);G.ammo[id]={mag:WEAP[id].mag,res:WEAP[id].start};}G.weapons.push('blade');G.ammo.blade={mag:1,res:0};BLD.t=9;
-  G.room=1;G.kills=0;G.shots=0;G.hits=0;G.gunShots={};G.lqDone=0;G.lqEnd=null;G.ranked=!(room>1)&&!SET.allGuns&&!G.custom;G.ember=0;SW.on=false;SW.state='';G.runTime=0;P.hp=100;P.dashCh=2;P.dashCd=0;P.inv=0;P.dashT=0;P.hurtT=0;P.reloadT=0;P.ads=0;P.raiseT=0;P.punch=0;
+  G.room=1;G.kills=0;G.shots=0;G.hits=0;G.gunShots={};G.lqDone=0;G.lqEnd=null;G.ranked=!(room>1)&&!G.custom;G.ember=0;SW.on=false;SW.state='';G.runTime=0;P.hp=100;P.dashCh=2;P.dashCd=0;P.inv=0;P.dashT=0;P.hurtT=0;P.reloadT=0;P.ads=0;P.raiseT=0;P.punch=0;
   if(room>1){G.room=room;}
   buildRoom(G.room);refreshBuild();$('banners').innerHTML='';$('hud').classList.remove('hidden');
   if(room>1){hide();G.state='play';lock();if(G.room===BOSS_ROOM)bossIntro();else roomIntro();}else{G.introPend=1;showPick(null);}}
@@ -3055,6 +3055,7 @@ addEventListener('keydown',e=>{if(ov.classList.contains('hidden')||e.ctrlKey||e.
     else if(!pro&&e.code==='KeyQ'){lqSortI=(lqSortI+LQS.length-1)%LQS.length;legendsScreen();}else if(!pro&&e.code==='KeyE'){lqSortI=(lqSortI+1)%LQS.length;legendsScreen();}
     else if(e.code==='KeyW'||k==='ArrowUp')menuNav(0,-1,false,false);else if(e.code==='KeyS'||k==='ArrowDown')menuNav(0,1,false,false);else if(k==='Enter'){const fe=ov.querySelector('.gpf');if(fe)fe.click();}return;}
   if(ov.querySelector('.ttln')){if(e.code==='KeyC')heroScreen();else if(e.code==='KeyL')legendsScreen();}},true);
+addEventListener('pagehide',()=>{if(G.runSeed&&!G.lqDone&&HERO&&(G.state==='play'||G.state==='pause'||G.state==='pick')){G.lqEnd=lqRecord('quit');}});
 function toTitle(){if(G.runSeed&&(G.state==='pause'))recStats(false);G.state='title';amb(null);SW.on=false;SW.state='';releaseLock();G.runSeed=0;G.custom=null;buildRoom(1);titleScreen();}
 
 /* ================= input ================= */
