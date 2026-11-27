@@ -601,6 +601,7 @@ addEventListener('gesturestart',e=>e.preventDefault());addEventListener('dblclic
 <script src="cannon.js"></script>
 <script src="fang.js"></script>
 <script src="armor.js"></script>
+<script src="orc.js"></script>
 <script>
 'use strict';
 /* ================= helpers ================= */
@@ -814,7 +815,7 @@ function emberHit(e,w){const boss=e.t==='boss',v=w.kind==='v',hy=e.yOff+e.h*.55;
   P.hitT=.12;P.critT=.15;sfx('swhit',e.x,e.z);
   if(w.first){w.first=false;hitStop(e.dead?.075:.05);P.shake=Math.max(P.shake,.42);}}
 const fwCurve=(s,hw)=>-(s*s)*hw*.38;
-function updateFWaves(dt){for(const w of G.fwaves){w.t+=dt;const step=w.spd*dt;w.x+=w.dx*step;w.z+=w.dz*step;w.y=lerp(w.y,groundT(w.x,w.z),Math.min(1,dt*12));
+function updateFWaves(dt){orcFxUpd(dt);for(const w of G.fwaves){w.t+=dt;const step=w.spd*dt;w.x+=w.dx*step;w.z+=w.dz*step;w.y=lerp(w.y,groundT(w.x,w.z),Math.min(1,dt*12));
   const k=w.t/w.life,hw=w.hw=lerp(w.w0,w.w1,Math.min(1,k*1.6)),px=-w.dz,pz=w.dx;
   for(const e of G.enemies){if(e.dead||e.spawnT>0||w.hit.has(e))continue;const rx=e.x-w.x,rz=e.z-w.z,sd=rx*px+rz*pz;
     if(Math.abs(sd)>hw+e.r)continue;const al=rx*w.dx+rz*w.dz-fwCurve(clamp(sd/hw,-1,1),hw);
@@ -1207,7 +1208,7 @@ function withSeed(s,fn){const R0=Math.random;Math.random=mulberry(s);try{return 
 function put(t,x,z,s){if(!own(PROPS,t))return;x=r2(x);z=r2(z);if(s===undefined)s=rseed();withSeed(s,()=>PROPS[t](x,z));G.map.props.push({t,x,z,s});}
 function resetRoom(){
   G.enemies=[];G.bullets=[];G.eb=[];G.bombs=[];G.booms=[];G.parts=[];G.decals=[];G.trc=[];G.puddles=[];G.spl=[];G.splat=[];G.fx=[];G.msl=[];G.walls=[];G.stat=[];G.pickups=[];G.portal=null;G.boss=null;G.heat=0;G.overheat=0;G.winT=-1;G.emptyT=0;
-  G.ob=[];G.flames=[];G.lights=[];G.feat=[];G.rifts=[];G.trees=[];SB.a=[];G.fwaves=[];G.slash=[];G.stones=[];G.corpses=[];}
+  G.ob=[];G.flames=[];G.lights=[];G.feat=[];G.rifts=[];G.trees=[];SB.a=[];G.fwaves=[];G.oshock=[];G.slash=[];G.stones=[];G.corpses=[];}
 function setDims(m){G.W=m.W;G.D=m.D;G.seed=m.seed;G.lim={x:m.W/2-4.6,z:m.D/2-4.6};G.flat=[m.spawn.slice(),m.exit.slice()];if(m.boss)G.flat.push([0,0]);G.exit=m.exit.slice();}
 function buildDeco(ds){withSeed(ds,()=>{const W=G.W,D=G.D;
   // boundary boulders on the cliffs
@@ -1230,7 +1231,9 @@ function buildDeco(ds){withSeed(ds,()=>{const W=G.W,D=G.D;
 function autoWaves(n,boss){if(boss)return[['boss']];
   const total=5+Math.floor(n*1.9);const pool=n<2?['grunt']:n<3?['grunt','grunt','bomber']:['grunt','grunt','bomber','spitter','spitter'];
   const list=[];for(let i=0;i<total;i++)list.push(pick(pool));const nw=n>=4?3:2,per=Math.ceil(total/nw);
-  const w=[];for(let i=0;i<total;i+=per)w.push(list.slice(i,i+per));return w;}
+  const w=[];for(let i=0;i<total;i+=per)w.push(list.slice(i,i+per));
+  if(n>=4){const L=w[w.length-1];L.push('orc');if(n>=6)L.push('orc');} // orc berserker: mini-boss in the last wave, 1 in rooms 4-5, 2 in rooms 6-7
+  return w;}
 function finishRoom(n){const m=G.map;
   P.x=m.spawn[0];P.z=m.spawn[1];P.y=groundT(P.x,P.z);P.grounded=true;P.vx=P.vz=P.vy=0;P.yaw=Math.atan2(-(m.exit[0]-P.x),-(m.exit[1]-P.z));P.pitch=0;P.dashT=0;P.jumps=0;
   if(!m.pickups){m.pickups=[];const na=m.boss?3:(Math.random()<.55?1:2);for(let i=0;i<na;i++){const p=spawnPos(6);m.pickups.push({t:'ammo',x:r2(p[0]),z:r2(p[1])});}
@@ -1270,8 +1273,8 @@ function buildRoom0(n){resetRoom();
 }
 
 /* ================= enemies ================= */
-const DEF={grunt:{hp:120,sp:5.6,r:.5,h:1.75},spitter:{hp:200,sp:4.4,r:.6,h:3},bomber:{hp:45,sp:4.2,r:.65,h:1.05},boss:{hp:2800,sp:3,r:1.5,h:typeof MON_D!=='undefined'?5.2:6},skel:{hp:40,sp:1.3,r:.5,h:1.9}}; // HP raised 2026-11-20 (was 45/32/18/1600); wraith tougher than goblin by request
-const ENAME={grunt:'GOBLIN',spitter:'WRAITH',bomber:'ROT SLIME',boss:'THE CREATURE',skel:'RISEN DEAD'};
+const DEF={grunt:{hp:120,sp:5.6,r:.5,h:1.75},spitter:{hp:200,sp:4.4,r:.6,h:3},bomber:{hp:45,sp:4.2,r:.65,h:1.05},boss:{hp:2800,sp:3,r:1.5,h:typeof MON_D!=='undefined'?5.2:6},skel:{hp:40,sp:1.3,r:.5,h:1.9},orc:{hp:560,sp:3.2,r:1.5,h:5.5}}; // HP raised 2026-11-20 (was 45/32/18/1600); wraith tougher than goblin by request
+const ENAME={grunt:'GOBLIN',spitter:'WRAITH',bomber:'ROT SLIME',boss:'THE CREATURE',skel:'RISEN DEAD',orc:'ORC BERSERKER'};
 // [lx,ly,lz, sx,sy,sz, color, unlit, yaw,pitch,roll, anim, arg, shape]  shapes: b box, s sphere, c cone, t cylinder, k taper
 const PARTS={
   skel:[[0,.95,0,.5,.22,.34,'#3a4656',0,0,0,0,null,0,'t'],[0,1.35,.08,.5,.55,.34,'#d8d0b8',0,0,.3,0,null,0,'s'],[0,1.28,.16,.18,.5,.2,'#2a2420',0,0,.3,0,null,0,'b'],
@@ -1301,7 +1304,8 @@ const PARTS={
     [-1.3,3.85,.2,.42,.42,.42,'#b89a80',0,0,0,0,'arm',2.0,'s'],[1.3,3.85,.2,.42,.42,.42,'#b89a80',0,0,0,0,'arm',2.0,'s'],
     [1.95,2.75,.65,.17,5.5,.17,'#3a2618',0,0,0,0,null,0,'t'],[1.95,5.6,.65,.62,.62,.62,'#8ff6ff',1,0,0,0,'spin',0,'s'],[0,2.75,.78,.32,.2,.06,'#c050ff',1]],
 };
-const ECOL={grunt:'#66843f',spitter:'#5a4a6a',bomber:'#b0c040',boss:'#5a4a8a',skel:'#d8d0b8'};
+PARTS.orc=PARTS.grunt.map(p=>{const q=p.slice();for(let i=0;i<6;i++)q[i]*=3.1;if(q[12])q[12]*=3.1;if(q[6]==='#66843f'||q[6]==='#55703a')q[6]='#3f5a26';return q;});
+const ECOL={grunt:'#66843f',spitter:'#5a4a6a',bomber:'#b0c040',boss:'#5a4a8a',skel:'#d8d0b8',orc:'#4f6e2c'};
 function makeEnemy(t,x,z){const d=DEF[t],hm=t==='boss'?1:1+(G.room-1)*.2,sm=t==='boss'?1:Math.min(1.2,1+(G.room-1)*.03);
   const e={t,x,z,gy:groundT(x,z),yaw:Math.atan2(P.x-x,P.z-z),hp:d.hp*hm,max:d.hp*hm,sp:d.sp*sm,r:d.r,h:d.h,burn:0,chill:0,chillT:0,frozen:0,flash:0,
     atk:t==='boss'?2:rnd(.8,1.8),spawnT:.6,fuse:-1,summon:8,wind:0,windMax:.55,swing:0,charge:0,armA:0,walk:0,kx:0,kz:0,
@@ -1638,6 +1642,7 @@ function updateEnemies(dt){const s=S();aiDirector(dt);
         else{if(e.rush){if(e.hes>0){e.hes-=dt;e.yOff=e.gy+(SET.gobHD&&typeof SL_D!=='undefined'?0:Math.abs(Math.sin(e.hes*18))*.22);}else{mx=nx;mz=nz;sp*=1.2;}}
           else{const rd=dist>11?1:dist<6?-.6:0;mx=nx*rd-nz*e.strafe*.5;mz=nz*rd+nx*e.strafe*.5;sp*=.38;if(Math.random()<dt*.3)e.strafe*=-1;}
           if(dist<2.7){e.fuse=e.fuseMax=.75;sfx('fuse',e.x,e.z);}}}
+      else if(e.t==='orc'){[mx,mz,sp]=orcAI(e,dt,dx,dz,dist,nx,nz,sp);turn=false;}
       else if(e.t==='boss'&&monOK()){[mx,mz,sp]=monAI(e,dt,dx,dz,dist,nx,nz,sp);turn=false;}
       else if(e.t==='boss'){const p2=e.hp<e.max*.5;
         if(e.raise===undefined)e.raise=RAISE.first;if(!(e.rch>0)&&!(e.wind>0)&&e.swing<=0){e.raise-=dt;if(e.raise<=0)bossRaise(e,p2);}
@@ -1669,15 +1674,15 @@ function updateEnemies(dt){const s=S();aiDirector(dt);
   }
   const Ls=G.enemies;for(let i=0;i<Ls.length;i++)for(let j=i+1;j<Ls.length;j++){const a=Ls[i],b=Ls[j];if(a.dead||b.dead||a.dance||b.dance)continue;
     const dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz),m=a.r+b.r;if(d<m&&d>1e-4){const p=(m-d)/2,ux=dx/d,uz=dz/d;
-      const wa=a.t==='boss'?.1:1,wb=b.t==='boss'?.1:1;a.x-=ux*p*wa;a.z-=uz*p*wa;b.x+=ux*p*wb;b.z+=uz*p*wb;}}
+      const wa=a.t==='boss'?.1:a.t==='orc'?.25:1,wb=b.t==='boss'?.1:b.t==='orc'?.25:1;a.x-=ux*p*wa;a.z-=uz*p*wa;b.x+=ux*p*wb;b.z+=uz*p*wb;}}
   // solid bodies: player can't walk into enemies (dashing passes through)
   if(P.dashT<=0)for(const e of G.enemies){if(e.dead||e.spawnT>0)continue;const dx=P.x-e.x,dz=P.z-e.z,d=Math.hypot(dx,dz),m=e.r+.45;
-    if(d<m&&Math.abs(P.y-e.gy)<1.8){const ux=d>1e-4?dx/d:1,uz=d>1e-4?dz/d:0,p=m-d,we=e.t==='boss'?0:.2;P.x+=ux*p*(1-we);P.z+=uz*p*(1-we);e.x-=ux*p*we;e.z-=uz*p*we;}}
+    if(d<m&&Math.abs(P.y-e.gy)<1.8){const ux=d>1e-4?dx/d:1,uz=d>1e-4?dz/d:0,p=m-d,we=e.t==='boss'||e.t==='orc'?0:.2;P.x+=ux*p*(1-we);P.z+=uz*p*(1-we);e.x-=ux*p*we;e.z-=uz*p*we;}}
   collide(P,.4,P.y,.55);
 }
 
 /* ================= combat ================= */
-function damage(e,amt,crit){if(e.dead)return;if(e.t==='boss'&&amt>=45)e.hitReq=1;e.hp-=amt;e._crit=!!crit;e.flash=.06;dmgNum(e,amt,crit);if(e.hp<=0)kill(e);else if(SMAP['ehurt_'+e.t]&&G.time-(e.hurtVT||-9)>.9&&Math.random()<.55){e.hurtVT=G.time;sfx('ehurt_'+e.t,e.x,e.z);}}
+function damage(e,amt,crit){if(e.dead)return;if(e.t==='orc'&&amt>=70)e.hitReq=1;if(e.t==='boss'&&amt>=45)e.hitReq=1;e.hp-=amt;e._crit=!!crit;e.flash=.06;dmgNum(e,amt,crit);if(e.hp<=0)kill(e);else if(SMAP['ehurt_'+e.t]&&G.time-(e.hurtVT||-9)>.9&&Math.random()<.55){e.hurtVT=G.time;sfx('ehurt_'+e.t,e.x,e.z);}}
 const DN=[];
 function dmgNum(e,amt,crit){if(!(amt>0))return;const n=e._dn;
   if(n&&!n.crit&&!crit&&G.time-n.t0<.3&&DN.includes(n)){n.v+=amt;n.t0=G.time;n.x=e.x;n.z=e.z;n.y=(e.spawnT>0?e.gy:e.yOff)+e.h+.08;return;}
@@ -1690,7 +1695,7 @@ function drawDmgNums(w,h){for(let i=DN.length-1;i>=0;i--){const d=DN[i],age=G.ti
   const t=d.txt||'+'+v+(d.crit?'!':'');if(d.txt){const z2=Math.max(8,Math.round(sz*.72));ictx.font=z2+"px 'Press Start 2P',monospace";}ictx.lineWidth=Math.max(3,sz*.22);ictx.strokeStyle='#000';ictx.strokeText(t,sx,sy);
   ictx.fillStyle=d.txt?d.col:d.crit?(age<.12?'#ffffff':'#ff3a2a'):'#ffd14a';ictx.fillText(t,sx,sy);}
   ictx.globalAlpha=1;}
-function kill(e){if(e.dead)return;e.dead=true;G.kills++;emberGain();if(e.t==='grunt'&&SET.gobHD)gobCorpse(e);if(e.t==='spitter'&&SET.gobHD)wrCorpse(e);if(e.t==='skel'&&SET.gobHD)skCorpse(e);if(e.t==='boss'&&SET.gobHD&&monOK())monCorpse(e);
+function kill(e){if(e.dead)return;e.dead=true;G.kills++;emberGain();if(e.t==='grunt'&&SET.gobHD)gobCorpse(e);if(e.t==='spitter'&&SET.gobHD)wrCorpse(e);if(e.t==='skel'&&SET.gobHD)skCorpse(e);if(e.t==='boss'&&SET.gobHD&&monOK())monCorpse(e);if(e.t==='orc'&&SET.gobHD&&orcOK())orcCorpse(e);
   burst(e.x,e.yOff+e.h*.5,e.z,ECOL[e.t],e.t==='boss'?70:16,7,.9,.18,-16);burst(e.x,e.yOff+1,e.z,'#a01818',8,5,.7,.12,-16);if(!(e.t==='grunt'&&Math.random()<GDS_CHANCE&&gobDeathSfx(e.x,e.z)))sfx(SMAP['kill_'+e.t]?'kill_'+e.t:'kill',e.x,e.z);
   if(has('vampiric'))lifesteal(S().vamp);
   if(e.t==='bomber')slimeBurst(e);
@@ -1720,7 +1725,7 @@ function applyStatus(e,fire,ice){const s=S();
     if(e.chill>=s.freezeAt){e.chill=0;e.frozen=s.freezeT;e.wind=0;statusPop(e,'FROZEN','#9fe8ff');fxAdd(3,e.x,e.yOff+e.h*.5,e.z,e.h*1.6,e.h*1.6,.45,[.7,.95,1]);burst(e.x,e.yOff+e.h*.5,e.z,'#9fe8ff',10,3,.5,.14,-6);}}
 }
 function thermal(e){if(e.tsCd>0)return;e.tsCd=.5;statusPop(e,'THERMAL','#ffffff');fxAdd(3,e.x,e.yOff+e.h*.6,e.z,e.h*1.6,e.h*1.6,.6,[.85,.95,.92]);steam(e);burst(e.x,e.yOff+e.h*.6,e.z,'#ffffff',8,5,.4,.12,-6);damage(e,30*S().mult);}
-const HEADF={grunt:.8,spitter:.8,bomber:.66,boss:.8,skel:.84};
+const HEADF={orc:.86,grunt:.8,spitter:.8,bomber:.66,boss:.8,skel:.84};
 function bulletHit(e,b,crit){let d=b.dmg;if(b.shot&&!b.shot.hit){b.shot.hit=1;G.hits++;}if(crit){d*=b.head;P.critT=.15;}
   if(has('chain')&&e.frozen>0){d*=3;shatter(e);}
   if(b.knock&&e.t!=='boss'){const l=Math.hypot(b.vx,b.vz)||1;e.kx+=b.vx/l*b.knock;e.kz+=b.vz/l*b.knock;}
@@ -1942,7 +1947,7 @@ function updatePuddles(dt){const s=S();
 }
 /* ===== v39 bullet FX: tracers, impacts, decals ===== */
 const TRC={rifle:{len:3.4,w:.026,c:'#ffc455'},shotgun:{len:1.3,w:.02,c:'#ffa63a'},cannon:{len:5,w:.06,c:'#ffd77a'}};
-const ICHOR={grunt:['#4a0806','#9a1810','#c8281a'],spitter:['#12061c','#5a1a78','#ff2a3a'],bomber:['#3a5a0a','#8fb028','#c8e050'],boss:['#ffe9a8','#3ad8e8','#fff8e0']};
+const ICHOR={orc:['#4a0806','#9a1810','#c8281a'],grunt:['#4a0806','#9a1810','#c8281a'],spitter:['#12061c','#5a1a78','#ff2a3a'],bomber:['#3a5a0a','#8fb028','#c8e050'],boss:['#ffe9a8','#3ad8e8','#fff8e0']};
 function hot(h,k){const c=C(h);return[c[0]*k,c[1]*k,c[2]*k];}
 function tracerPts(b){const sp=Math.hypot(b.vx,b.vy,b.vz)||1,T=TRC[b.wid]||TRC.rifle,tl=Math.min(T.len*(b.ads?1.4:1)/sp,b.age),f=t=>Math.max(0,1-t/.11),k=f(b.age),k2=f(b.age-tl),o=b.vo;
   return[[b.x-b.vx*tl+o[0]*k2,b.y-b.vy*tl+o[1]*k2,b.z-b.vz*tl+o[2]*k2],[b.x+o[0]*k,b.y+o[1]*k,b.z+o[2]*k]];}
@@ -2447,6 +2452,7 @@ function drawCorpses(){if(!G.corpses||!G.corpses.length)return;
   for(let i=G.corpses.length-1;i>=0;i--){const e=G.corpses[i];
     if(e.t==='skel'){skDraw(e,null);continue;}
     if(e.t==='boss'){monDraw(e,null);continue;}
+    if(e.t==='orc'){if(orcDraw(e,null)==='gone')G.corpses.splice(i,1);continue;}
     if(e.t==='spitter'){wrDraw(e,null);continue;}const C=GOBA.clips[e.dclip],end=C.n/C.fps,age=G.time-e.dt0;
     if(age<0){G.corpses.splice(i,1);continue;}gobDraw(e,null);}}
 // ----- dancing goblin: hops onto a standing stone and dances until the player gets close or hurts it
@@ -2806,6 +2812,119 @@ function monAI(e,dt,dx,dz,dist,nx,nz,sp){const p2=e.hp<e.max*.5;
   face(3);e._run=p2&&dist>12;if(dist>4.5)return [nx,nz,sp*(e._run?2:1)];return [0,0,0];}
 function explodeFx(e){if(typeof ffxPuff==='function')ffxPuff(e.x,e.gy+.6,e.z,'red',26,2.2,5);for(let i=0;i<24;i++)burst(e.x+rnd(-2,2),e.gy+rnd(.1,1),e.z+rnd(-2,2),pick(['#ff7a2f','#ffd14a','#5a4a40']),1,rnd(4,9),rnd(.4,.9),rnd(.15,.3),-8);G.flash={x:e.x,y:e.gy+1,z:e.z,i:2,r:12,c:[1.2,.6,.2]};}
 
+/* ===== Orc Berserker (heavy enemy): Jeter's g0blin100.fbx (AccuRIG rig), the monster's Mixamo clips retargeted onto it (game/orc/oexport.py).
+   Data (ORC_D mesh, ORCA clips, ORCT textures) lives in orc.js beside the page; without it the orc uses the classic box model. ===== */
+const ORCQ={tint:[.92,1,.9],alb:.72,rim:.3,self:.12,spec:.3,pix:1};
+const ORC={ready:0,need:1,Gm:new Float32Array(240),tmp:new Float32Array(140),d:null};
+// frames @30fps. punch: slow windup (wr) to the hit frame, then full speed. pound = Mutant Jump Attack: leap, slam at hit, shockwave out to R
+const ORCATK={punch:{hit:9,end:34,wr:.42,rate:.95,dmg:34,r:5.4,arc:.3},pound:{hit:53,end:100,rate:1.05,dmg:42,R:9.5,wave:24,core:3.6}};
+const orcOK=()=>typeof ORCA!=='undefined'&&typeof ORC_D!=='undefined';
+const orcDur=(c,rate)=>ORCA.clips[c].n/30/(rate||1);
+function orcInit(){if(ORC.d)return;const q=new Int16Array(b64u8(ORCA.d).buffer),ts=ORCA.ts/32767,d=new Float32Array(q.length);
+  for(let i=0;i<q.length;i++)d[i]=(i%7<4)?q[i]/32767:q[i]*ts;ORC.d=d;}
+function orcLoad(){ORC.tried=1;const m=ORC_D,P=new Int16Array(b64u8(m.p).buffer),N=new Int8Array(b64u8(m.n).buffer),Tg=new Int8Array(b64u8(m.tg).buffer),UV=new Uint16Array(b64u8(m.uv).buffer),
+  BI=b64u8(m.bi),BW=b64u8(m.bw),I=new Uint16Array(b64u8(m.i).buffer),sc=m.s/32767,n=P.length/3,a=new Float32Array(n*20);
+  for(let i=0;i<n;i++){const o=i*20;a[o]=P[i*3]*sc;a[o+1]=P[i*3+1]*sc;a[o+2]=P[i*3+2]*sc;a[o+3]=N[i*3]/127;a[o+4]=N[i*3+1]/127;a[o+5]=N[i*3+2]/127;
+    a[o+6]=Tg[i*4]/127;a[o+7]=Tg[i*4+1]/127;a[o+8]=Tg[i*4+2]/127;a[o+9]=Tg[i*4+3]<0?-1:1;a[o+10]=UV[i*2]/65535;a[o+11]=UV[i*2+1]/65535;
+    for(let k=0;k<4;k++){a[o+12+k]=BI[i*4+k];a[o+16+k]=BW[i*4+k]/255;}}
+  ORC.vb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,ORC.vb);gl.bufferData(gl.ARRAY_BUFFER,a,gl.STATIC_DRAW);
+  ORC.ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ORC.ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,I,gl.STATIC_DRAW);curMesh=null;
+  ORC.tex={};ORC.need=0;for(const part in ORCT)for(const k of ['alb','nor','mra']){ORC.need++;const im=new Image();im.onload=()=>{const t=gl.createTexture();gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,t);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,im);gl.generateMipmap(gl.TEXTURE_2D);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.activeTexture(gl.TEXTURE0);(ORC.tex[part]=ORC.tex[part]||{})[k]=t;ORC.ready++;};im.src=ORCT[part][k];}}
+function orcSample(c,t,out){const C=ORCA.clips[c],d=ORC.d;let f=t*30;
+  if(C.loop){f%=C.n;if(f<0)f+=C.n;}else f=clamp(f,0,C.n-1);
+  const i0=Math.floor(f),i1=C.loop?(i0+1)%C.n:Math.min(C.n-1,i0+1),a=f-i0,o0=(C.o+i0)*140,o1=(C.o+i1)*140;
+  for(let b=0;b<20;b++){const k=b*7,p=o0+k,q=o1+k,s=d[p]*d[q]+d[p+1]*d[q+1]+d[p+2]*d[q+2]+d[p+3]*d[q+3]<0?-1:1;
+    for(let j=0;j<4;j++)out[k+j]=d[p+j]*(1-a)+d[q+j]*s*a;for(let j=4;j<7;j++)out[k+j]=d[p+j]*(1-a)+d[q+j]*a;}return out;}
+function orcTrav(c,f){const T=ORCA.clips[c].trav;if(!T)return 0;const x=clamp(f/3,0,T.length-1),i=Math.floor(x),j=Math.min(T.length-1,i+1);return T[i]+(T[j]-T[i])*(x-i);}
+function orcPick(e){
+  if(e.dead)return ['die',(G.time-e.dt0)*1.25,.15];
+  if(e.spawnT>0)return ['idle',null,.2];
+  if(e.ost==='roar')return ['roar',.6+e.ot*1.3,.2];
+  if(e.ost==='hit')return ['hit',e.ot,.12];
+  if(e.ost==='punch')return ['punch',e.of/30,.12];
+  if(e.ost==='pound')return ['jump',e.of/30,.15];
+  if(e.frozen>0)return [e.an?e.an.c:'idle',e.an?e.an.t:0,.2];
+  if(e.gm>.4)return [e._run?'run':'walk',null,.3];
+  return ['idle',null,.35];}
+function orcPose(e){orcInit();const now=G.time,dt=Math.min(.1,Math.max(0,now-(e._gt??now)));e._gt=now;
+  if(!e.an)e.an={c:'idle',t:Math.random()*3,snap:new Float32Array(140),cur:new Float32Array(140),bl:1,fade:.2};
+  const an=e.an,mvd=Math.abs(e.walk-(e._gw??e.walk));e._gw=e.walk;const spd=dt>0?mvd/dt/1.4:0;e.gm=lerp(e.gm||0,mvd>1e-4?1:0,Math.min(1,dt*8));
+  const [c,t,fade]=orcPick(e);
+  if(c!==an.c){an.snap.set(an.cur);an.bl=0;an.fade=fade;an.c=c;if(t===null)an.t=0;}
+  if(t===null&&!(e.frozen>0&&!e.dead)){const C=ORCA.clips[c],nat=C.stride?C.stride/(C.n/30):0;an.t+=dt*(nat?clamp(spd/nat,.5,2):1);}
+  else if(t!==null)an.t=t;
+  const P_=orcSample(c,an.t,ORC.tmp);
+  if(an.bl<1){an.bl=Math.min(1,an.bl+dt/an.fade);gaMix(an.snap,P_,ease(an.bl),an.cur);}else an.cur.set(P_);
+  return gaMat(an.cur,ORC.Gm);}
+function orcDraw(e,em){if(!orcOK())return false;if(!GOB.tried){GOB.tried=1;try{gobLoad();}catch(err){console.error(err);}}if(!ORC.tried){try{orcLoad();}catch(err){console.error(err);}}
+  let y=e.yOff;if(e.dead){const a=G.time-e.dt0-orcDur('die',1.25)-2.5;if(a>1.6)return 'gone';if(a>0)y-=a*1.4;}
+  if(!GOB.p||ORC.ready<ORC.need)return false;const pm=PP.main,u=GOB.u,g=n=>gl.getUniform(pm,U[n]);
+  if(!em&&e.rage&&!e.dead){const p=.6+.4*Math.sin(G.time*(SET.calm?4:11)+e.seed);em=[.32*p,.03*p,.02*p];}
+  gl.useProgram(GOB.p);gl.activeTexture(gl.TEXTURE5);gl.bindTexture(gl.TEXTURE_2D,PP.atlas);gl.activeTexture(gl.TEXTURE0);
+  gl.uniform1i(u.uAlb,2);gl.uniform1i(u.uNor,3);gl.uniform1i(u.uMRA,4);gl.uniform1i(u.uAtlas,5);gl.uniformMatrix4fv(u.uVP,false,VP);
+  for(const k of ['uSky','uGround','uSunDir','uSunCol','uFog','uMist','uCam'])gl.uniform3fv(u[k],g(k));for(const k of ['uFogN','uFogF','uFogK','uMock','uTime'])gl.uniform1f(u[k],g(k));
+  gl.uniform1f(u.uGrit,+SET.gobGrit||0);gl.uniform1f(u.uPix,(+SET.gobPix||0)*ORCQ.pix);gl.uniform1f(u.uRim,ORCQ.rim);gl.uniform1f(u.uSelf,ORCQ.self);gl.uniform1f(u.uAK,ORCQ.alb);gl.uniform1f(u.uSpecK,ORCQ.spec);gl.uniform3fv(u.uTint,ORCQ.tint);
+  gl.uniform3fv(u.uEm,em?(e.wind>0?em.map(x=>x*.3):em.map(x=>x*.6)):ZERO);gl.uniform3fv(u.uLP,LP);gl.uniform3fv(u.uLC,LC);gl.uniform1fv(u.uLR,LR);
+  const r=rotM(e.yaw,0,0);gl.uniformMatrix4fv(u.uM,false,new Float32Array([r[0],r[3],r[6],0,r[1],r[4],r[7],0,r[2],r[5],r[8],0,e.x,y,e.z,1]));
+  gl.uniformMatrix3fv(u.uR,false,new Float32Array([r[0],r[3],r[6],r[1],r[4],r[7],r[2],r[5],r[8]]));
+  const still=e._B&&e.dead&&G.time-e.dt0>orcDur('die',1.25)+.3;if(!still){if(!e._B)e._B=new Float32Array(240);e._B.set(orcPose(e));}gl.uniform4fv(u.uB,e._B);
+  gl.bindBuffer(gl.ARRAY_BUFFER,ORC.vb);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ORC.ib);const L=GOB.loc;
+  gl.vertexAttribPointer(L[0],3,gl.FLOAT,false,80,0);gl.vertexAttribPointer(L[1],3,gl.FLOAT,false,80,12);gl.vertexAttribPointer(L[2],4,gl.FLOAT,false,80,24);gl.vertexAttribPointer(L[3],2,gl.FLOAT,false,80,40);
+  gl.enableVertexAttribArray(4);gl.enableVertexAttribArray(5);gl.vertexAttribPointer(4,4,gl.FLOAT,false,80,48);gl.vertexAttribPointer(5,4,gl.FLOAT,false,80,64);
+  for(const part in ORC_D.rng){const [o,n]=ORC_D.rng[part],T=ORC.tex[part];for(const [k,unit] of [['alb',2],['nor',3],['mra',4]]){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,T[k]);}
+    gl.drawElements(gl.TRIANGLES,n,gl.UNSIGNED_SHORT,o*2);}
+  gl.activeTexture(gl.TEXTURE0);gl.disableVertexAttribArray(4);gl.disableVertexAttribArray(5);gl.useProgram(pm);curMesh=null;return true;}
+function orcCorpse(e){if(!G.corpses)G.corpses=[];e.dt0=G.time;e.ost=null;e.wind=0;e.flash=0;G.corpses.push(e);}
+// brain: lumber in, heavy two-stage punch up close, leaping ground pound from mid range (or in place when crowded). Berserk below 40% HP: roar, then run and attack faster.
+const ORC_JT=()=>orcTrav('jump',ORCATK.pound.hit)||5.4;
+function orcStartPound(e,dist){const A=ORCATK.pound;e.ost='pound';e.of=0;e.hd=0;e.leap=clamp(dist-3,0,14)/ORC_JT();e.windMax=A.hit/30/A.rate;sfx('bwind',e.x,e.z);}
+function orcAI(e,dt,dx,dz,dist,nx,nz,sp){
+  const face=k=>{let a=Math.atan2(dx,dz)-e.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));e.yaw+=a*Math.min(1,dt*k);};
+  if(e.ost===undefined){e.ost=null;e.ot=0;e.pcd=rnd(2.5,4.5);e.atk=Math.max(e.atk,rnd(.6,1.2));e.hitCd=0;}
+  e.ot+=dt;if(e.pcd>0)e.pcd-=dt;if(e.hitCd>0)e.hitCd-=dt;
+  if(!e.rage&&e.hp<e.max*.4)e.rage=1;const rg=e.rage?1.3:1;
+  if(e.ost==='roar'){face(2);if(e.ot>.3&&!e.rr){e.rr=1;sfx('mroar',e.x,e.z);P.shake=Math.max(P.shake,.3);}if(e.ot>=2.2)e.ost=null;return [0,0,0];}
+  if(e.ost==='hit'){if(e.ot>=orcDur('hit',1)-.4)e.ost=null;return [0,0,0];}
+  if(e.ost==='punch'){const A=ORCATK.punch,pre=e.of<A.hit;e.of+=dt*30*(pre?A.wr:A.rate)*rg;e.wind=e.of<A.hit?(A.hit-e.of)/30/(A.wr*rg):0;
+    if(pre)face(4);else if(e.of<A.hit+6&&dist>3){e.x+=Math.sin(e.yaw)*3.5*dt;e.z+=Math.cos(e.yaw)*3.5*dt;}
+    if(!e.hd&&e.of>=A.hit){e.hd=1;const facing=(dx*Math.sin(e.yaw)+dz*Math.cos(e.yaw))/dist;sfx('swipe',e.x,e.z);sfx('bslam',e.x,e.z);P.shake=Math.max(P.shake,.22);
+      burst(e.x+Math.sin(e.yaw)*3.4,e.yOff+2.6,e.z+Math.cos(e.yaw)*3.4,'#ffe0a0',10,4.5,.3,.14,-6);
+      if(dist<A.r&&facing>A.arc&&Math.abs(P.y-e.gy)<3.5){hurt(Math.round(A.dmg*(e.rage?1.15:1)),e.x,e.z,ENAME.orc);P.vx+=nx*9;P.vz+=nz*9;}}
+    if(e.of>=A.end){e.ost=null;e.wind=0;e.atk=(e.rage?.45:1.1)+rnd(0,.5);}return [0,0,0];}
+  if(e.ost==='pound'){const A=ORCATK.pound,pf=e.of;e.of+=dt*30*A.rate*(e.rage?1.12:1);const f=e.of;e.wind=f<A.hit?(A.hit-f)/30/A.rate:0;
+    if(f<14)face(3);const mv=(orcTrav('jump',f)-orcTrav('jump',pf))*e.leap;if(mv>0){e.x+=Math.sin(e.yaw)*mv;e.z+=Math.cos(e.yaw)*mv;}
+    if(!e.hd&&f>=A.hit){e.hd=1;orcPound(e);}
+    if(f>=A.end){e.ost=null;e.wind=0;e.pcd=e.rage?rnd(3.5,5):rnd(6,8.5);e.atk=Math.max(e.atk,.7);}return [0,0,0];}
+  if(e.rage&&!e.rf){e.rf=1;e.ost='roar';e.ot=0;e.rr=0;e.wind=0;return [0,0,0];}
+  if(e.hitReq){e.hitReq=0;if(e.hitCd<=0&&!e.rage){e.hitCd=5;e.ost='hit';e.ot=0;return [0,0,0];}}
+  if(e.atk<=0&&Math.abs(P.y-e.gy)<3.5){
+    if(dist<4.6){if(e.pcd<=0&&Math.random()<.3)orcStartPound(e,dist);else{e.ost='punch';e.of=0;e.hd=0;e.windMax=ORCATK.punch.hit/30/ORCATK.punch.wr;sfx('gwind',e.x,e.z);}}
+    else if(dist>6.5&&dist<18&&e.pcd<=0&&Math.random()<dt*1.4)orcStartPound(e,dist);}
+  if(e.ost)return [0,0,0];
+  face(e.rage?4:2.5);e._run=e.rage&&dist>3;if(dist>3.8)return [nx,nz,sp*(e._run?1.75:1)];return [0,0,0];}
+// slam: core damage under the fists, then a ground shockwave ring the player can jump over
+function orcPound(e){const A=ORCATK.pound,d=Math.hypot(P.x-e.x,P.z-e.z),lx=e.x+Math.sin(e.yaw)*1.8,lz=e.z+Math.cos(e.yaw)*1.8;
+  sfx('bslam',e.x,e.z);P.shake=Math.max(P.shake,d<12?.8:.4);rumble&&rumble(.9,.7,260);
+  for(let i=0;i<30;i++){const a=i/30*6.28;burst(lx+Math.cos(a)*2.2,e.gy+.2,lz+Math.sin(a)*2.2,pick(['#ff6a1a','#ffd14a','#5a4a3a','#3a2a1e']),1,rnd(4,8),rnd(.4,.8),rnd(.15,.3),-10);}
+  G.flash={x:lx,y:e.gy+.6,z:lz,i:1.6,r:10,c:[1.2,.55,.2]};try{addDecal(lx,e.gy+.02,lz,[0,1,0],5.5,'#140e0a',0,9);}catch(err){}
+  let hit=false;if(d<A.core&&P.y-e.gy<2.2){hurt(Math.round(A.dmg*(e.rage?1.15:1)),e.x,e.z,ENAME.orc);hit=true;}
+  (G.oshock=G.oshock||[]).push({x:lx,z:lz,y:e.gy,t:0,R:A.R,spd:12,hit,dmg:A.wave*(e.rage?1.15:1)});}
+function orcFxUpd(dt){if(!G.oshock)return;for(const w of G.oshock){w.t+=dt;const r=w.t*w.spd;
+    if(!w.hit&&G.state==='play'){const dx=P.x-w.x,dz=P.z-w.z,d=Math.hypot(dx,dz)||.01;
+      if(d<r+.5&&d>r-1.4&&P.y-groundT(P.x,P.z)<.5){w.hit=true;hurt(Math.round(w.dmg*(1-.45*d/w.R)),w.x,w.z,ENAME.orc);P.vx+=dx/d*10;P.vz+=dz/d*10;}}
+    if(Math.random()<.7){const a=Math.random()*6.28;burst(w.x+Math.cos(a)*r,w.y+.1,w.z+Math.sin(a)*r,pick(['#5a4a3a','#ff8a3a','#3a2a1e']),1,2.5,.4,.12,-6);}}
+  G.oshock=G.oshock.filter(w=>w.t*w.spd<w.R);}
+function orcFxDraw(){const CR=C('#ff3a1a'),CR2=C('#ff9a3a'),CW=C('#ffb060');
+  for(const e of G.enemies){if(e.dead||e.t!=='orc'||e.ost!=='pound'||!(e.of<ORCATK.pound.hit))continue;
+    const k=e.of/ORCATK.pound.hit,rest=(ORC_JT()-orcTrav('jump',e.of))*e.leap,x=e.x+Math.sin(e.yaw)*(rest+1.8),z=e.z+Math.cos(e.yaw)*(rest+1.8),y=groundT(x,z)+.04,
+      pul=.85+.15*Math.sin(G.time*(SET.calm?6:22)),R=ORCATK.pound.R,n=36;
+    box(x,y,z,ORCATK.pound.core*2*(.4+.6*k),.03,ORCATK.pound.core*2*(.4+.6*k),G.time,0,0,flk()?CR:CR2,null,-1,1,true,MESH.t);
+    for(let i=0;i<n;i++){if(i%2)continue;const a=i/n*6.283+G.time*.4;box(x+Math.cos(a)*R*k,y+.02,z+Math.sin(a)*R*k,.7*pul,.04,.18,-a+1.5708,0,0,CR,null,-1,1,true,MESH.t);}}
+  if(G.oshock)for(const w of G.oshock){const r=w.t*w.spd,f=1-r/w.R,n=48;
+    for(let i=0;i<n;i++){const a=i/n*6.283,x=w.x+Math.cos(a)*r,z=w.z+Math.sin(a)*r;box(x,groundT(x,z)+.18*f+.05,z,.85,.32*f+.06,.28,-a+1.5708,0,0,i%3?CW:CR2,null,-1,1,true);}}}
+
 function skDraw(e,em){if(!GOB.tried){GOB.tried=1;try{gobLoad();}catch(err){console.error(err);}}if(!SK.tried){try{skLoad();}catch(err){console.error(err);}}
   if(!GOB.p||SK.ready<3)return false;const pm=PP.main,u=GOB.u;
   // perf: frustum cull, LOD + pose throttling by view depth, main-program uniform reads cached per frame
@@ -2896,6 +3015,7 @@ function render(){
     box(px,py+1.8,pz,2.3,.05,2.3,G.time*.5,1.5708,0,C(flk()?'#0e5a68':'#08404c'),null,-1,1,true,MESH.t);box(px,py+1.8,pz,1.3,.07,1.3,-G.time,1.5708,0,C('#2ab8c8'),null,-1,1,true,MESH.t);
     if(Math.random()<.4)burst(px+rnd(-1,1),py+.2,pz+rnd(-.3,.3),'#8ff6ff',1,.8,1,.1,3);}}
   for(const w of G.fwaves)drawFWave(w);
+  orcFxDraw();
   drawRifts();fxDrawAll();
   if(G.state==='edit')drawEditor();
   // enemies — rim light + self-illumination so they pop out of the dark
@@ -2909,6 +3029,7 @@ function render(){
     if(e.t==='bomber'&&SET.gobHD&&slDraw(e,em))continue;
     if(e.t==='skel'&&SET.gobHD&&skDraw(e,em))continue;
     if(e.t==='boss'&&SET.gobHD&&monDraw(e,em))continue;
+    if(e.t==='orc'&&SET.gobHD&&orcDraw(e,em))continue;
     for(const p of PARTS[e.t]){let [lx,ly,lz,sx,sy,sz,c,unlit,py=0,pp=0,pr=0,anim,arg,shp]=p;
       if(anim==='spin')py+=e.spin*2;else if(anim==='spin2')py-=e.spin*1.5;else if(anim==='tumble'){pp+=Math.sin(e.spin*9+arg)*.16;pr+=Math.cos(e.spin*7+arg)*.16;const sq=1+Math.sin(e.spin*(e.fuse>=0?40:9))*.06;sx*=sq;sz*=sq;sy/=sq;}
       else if(anim==='sway'){pp+=Math.sin(G.time*3.4+arg+e.seed)*.32;}
@@ -3653,8 +3774,8 @@ const ED_TOOLS=[['select','SELECT / MOVE'],['tree','TREE'],['mesa','MESA'],['rui
 const ED_NAME=Object.fromEntries(ED_TOOLS);
 const FEATK={hill:{r:6,dh:1.6,k:'s'},hollow:{r:6,dh:-2,k:'s'},plateau:{r:5,dh:2,k:'c'}};
 const PROPR={mesa:2.6,ruin:3,wall:2.6,tree:1.2,log:2.2,boulder:1.4,stone:1,shrooms:.9,bones:1.1,stump:1,roots:2.2,branches:1.5,brazier:.8,redbrazier:.8};
-const EALIAS={goblin:'grunt',grunt:'grunt',wraith:'spitter',spitter:'spitter',bloater:'bomber',bomber:'bomber',wizard:'boss',boss:'boss'};
-const ENICE={grunt:'goblin',spitter:'wraith',bomber:'bloater',boss:'wizard'};
+const EALIAS={orc:'orc',berserker:'orc',goblin:'grunt',grunt:'grunt',wraith:'spitter',spitter:'spitter',bloater:'bomber',bomber:'bomber',wizard:'boss',boss:'boss'};
+const ENICE={orc:'orc',grunt:'goblin',spitter:'wraith',bomber:'bloater',boss:'wizard'};
 const E={map:null,tool:'select',sel:null,drag:false,moved:false,pre:null,cur:null,undo:[],x:0,y:12,z:0,yaw:0,pitch:-.75,rot:false,mx:0,my:0,msg:''};
 function sanitizeMap(o){if(!o||typeof o!=='object')throw new Error('That is not a map file.');
   const num=(v,d,a,b)=>{v=+v;return isFinite(v)?clamp(v,a,b):d;};
@@ -3738,7 +3859,7 @@ function edPanel(){const m=E.map,s=E.sel,ms=Object.keys(edMaps());const B=(t,f,c
   <label>NAME <input id="edname" value="${m.name}" maxlength="40" onchange="edField('name',this.value)"></label>
   <label>SIZE <input type="number" min="30" max="120" step="2" value="${m.W}" onchange="edField('W',this.value)"> x <input type="number" min="30" max="120" step="2" value="${m.D}" onchange="edField('D',this.value)"></label>
   <label>WAVES <input id="edwaves" placeholder="auto" value="${edWavesText()}" onchange="edField('waves',this.value)"></label>
-  <div class="hl">Enemies: goblin, wraith, bloater, wizard. Separate waves with /. Empty = auto.</div>
+  <div class="hl">Enemies: goblin, orc, wraith, bloater, wizard. Separate waves with /. Empty = auto.</div>
   <label class="chk"><input type="checkbox" ${m.boss?'checked':''} onchange="edField('boss')"> BOSS ARENA (flat centre)</label>
   <div class="hl">${m.props.length} props · ${m.feat.length} terrain shapes · ${m.pickups.length} pickups · rebuild ${E.ms||0} ms</div>
   ${B('▶ PLAYTEST','edPlay()','go')}${B('UNDO (CTRL+Z)','edUndo()')}
@@ -3787,7 +3908,7 @@ function jamTick(){const el=$('jsteam');if(!el)return;const hf=(G.heat||0)/HEATM
 if(!gl){show('<h2>WebGL unavailable</h2><p class="sub">This browser could not start 3D graphics.</p>');}
 else if(window.IS_PHONE){}else{try{initGL();G.ammo={rifle:{mag:30,res:150}};buildRoom(1);heroScreen();requestAnimationFrame(frame);}
   catch(err){show('<h2>Could not start</h2><p class="sub">'+String(err.message||err).slice(0,200)+'</p>');}}
-window.__MOCK=MOCK;window.__dbg={SL,SLQ,SLCOL,slimeBurst,slPose,WEAP,BLD,bladePose,bladeLoad,MON,MONATK,MONR,monAI,monPose,SK,SKA,SKQ,makePiles,skPose,skCorpse,RAISE,bossRaise,wrCorpse,WRDEATH,WR,WRQ,wrPose,GA,GOBA,spawnDancer,danceUpd,gobCorpse,damage,CLUB,CLUBQ,GOB,GOBQ,MOCK,gobPose,SW,activateSword,VMA,E,openEditor,closeEditor,edClick,edRebuild,edPick,edRay,edPlay,edNew,edUndo,edDelete,sanitizeMap,buildFromMap,withSeed,eshoot,showPick,kill,bulletHit,hurt,hitStop,mulberry,adsRatio,G,P,S,PAD,SET,pollPad,drawIndicators,update,startRun,choose,buildRoom,makeEnemy,render,hud,dash,jump,switchTo,startReload,tryFire,keys,setFiring:v=>firing=v};
+window.__MOCK=MOCK;window.__dbg={ORC,ORCATK,orcAI,orcPose,SL,SLQ,SLCOL,slimeBurst,slPose,WEAP,BLD,bladePose,bladeLoad,MON,MONATK,MONR,monAI,monPose,SK,SKA,SKQ,makePiles,skPose,skCorpse,RAISE,bossRaise,wrCorpse,WRDEATH,WR,WRQ,wrPose,GA,GOBA,spawnDancer,danceUpd,gobCorpse,damage,CLUB,CLUBQ,GOB,GOBQ,MOCK,gobPose,SW,activateSword,VMA,E,openEditor,closeEditor,edClick,edRebuild,edPick,edRay,edPlay,edNew,edUndo,edDelete,sanitizeMap,buildFromMap,withSeed,eshoot,showPick,kill,bulletHit,hurt,hitStop,mulberry,adsRatio,G,P,S,PAD,SET,pollPad,drawIndicators,update,startRun,choose,buildRoom,makeEnemy,render,hud,dash,jump,switchTo,startReload,tryFire,keys,setFiring:v=>firing=v};
 </script>
 </body>
 </html>
