@@ -3115,7 +3115,7 @@ function hudA(s){
    const l=$('mhAl');l.textContent=jm?(G.vented?'VENTING':'MISFIRE · R VENT'):'MANA HEAT';l.classList.toggle('on',jm||f>.05);}
   const pad=PAD.connected,emOn=EMBER_NEED<1e8,k=pad+'|'+s.dashMax+'|'+emOn;
   if(k!==abKey){abKey=k;const cell=(id,ic,key,lbl,cls)=>`<div class="ab"><div class="cell ${cls||''}" id="${id}"><div class="f"></div>${ic}<span class="k">${key}</span></div><div class="pips ${cls||''}" id="p${id}"><u></u></div><div class="lbl">${lbl}</div></div>`;
-    $('abA').innerHTML=cell('cH',ICO.heal,pad?'▼':'F','MENDING<br>LIGHT')+cell('cB',ICO.bomb,pad?'LB':'G','ARCANE<br>BOMB')+(emOn?cell('cE',ICO.ember,pad?'▲':'E','EMBERFALL','em'):'')+
+    $('abA').innerHTML=cell('cH',ICO.heal,pad?'▼':'F','MENDING<br>LIGHT')+cell('cB',ICO.bomb,pad?'RB':'G','ARCANE<br>BOMB')+(emOn?cell('cE',ICO.ember,pad?'▲':'E','EMBERFALL','em'):'')+
       `<div class="dash" id="dA">${'<u><i></i></u>'.repeat(s.dashMax)}<div class="lbl">DASH</div></div>`;}
   const pip=(u,f)=>{u.className=f>=1?'':'e';if(f<1){if(!u.firstChild)u.appendChild(document.createElement('i'));u.firstChild.style.width=f*100+'%';}else if(u.firstChild)u.removeChild(u.firstChild);};
   const cdCell=(id,cd,max,no)=>{const c=$(id);if(!c)return;const on=cd>0,f=on?1-cd/max:1;c.querySelector('.f').style.height=(on?f*100:0)+'%';
@@ -3152,7 +3152,7 @@ function hud(){const s=S(),w=curW(),a=G.ammo[w.id];
    const lbl=no?'MENDING LIGHT NOT READY · '+Math.ceil(cd)+'s':cd>0?'MENDING LIGHT '+Math.ceil(cd)+'s':key+' · MENDING LIGHT +'+HEAL_HP;
    const hb=$('healhud');if(hb.dataset.k!==cls+lbl){hb.dataset.k=cls+lbl;if(!hb.classList.contains('no')||cls!=='no')hb.className=cls;$('hllbl').textContent=lbl;}
    $('hlfill').style.width=((1-cd/HEAL_CD)*100)+'%';
-   {const bc=G.bombCd||0,bk=PAD.connected?'LB':'G',bn=G.bombNoT>0&&bc>0,bcl=bn?'no':bc>0?'cd':'ready';const bl=bn?'ARCANE BOMB NOT READY · '+Math.ceil(bc)+'s':bc>0?'ARCANE BOMB '+Math.ceil(bc)+'s':bk+' · ARCANE BOMB';
+   {const bc=G.bombCd||0,bk=PAD.connected?'RB':'G',bn=G.bombNoT>0&&bc>0,bcl=bn?'no':bc>0?'cd':'ready';const bl=bn?'ARCANE BOMB NOT READY · '+Math.ceil(bc)+'s':bc>0?'ARCANE BOMB '+Math.ceil(bc)+'s':bk+' · ARCANE BOMB';
     const bh=$('bombhud');if(bh.dataset.k!==bcl+bl){bh.dataset.k=bcl+bl;if(!bh.classList.contains('no')||bcl!=='no')bh.className=bcl;$('bmlbl').textContent=bl;}$('bmfill').style.width=((1-bc/BOMB_CD)*100)+'%';}$('healfx').style.opacity=SET.calm?(G.healFx||0)*.5:(G.healFx||0);}
   $('vig').style.opacity=Math.min(1,P.hurtT*2.2+(P.hp<s.maxHp*.25?.25+(SET.calm?0:.1*Math.sin(G.time*6)):0));
   $('wname').textContent=w.name+(P.ads>.7?(w.id==='rifle'?' · AP ROUNDS':w.id==='shotgun'?' · DOUBLE BLAST':' · HEAVY ROUNDS'):'');
@@ -3214,7 +3214,7 @@ function titleScreen(){if(!HERO){heroScreen();return;}G.state='title';$('hud').c
 function helpScreen(){const r=(a,b)=>`<div><span>${a}</span><em>${b}</em></div>`;
   show(`<div class="pnl one"><div class="hd"><h2>HOW TO PLAY</h2><div class="sp"></div><div class="hint"><span><span class="kcp g">ESC</span> &nbsp;BACK</span></div></div><div class="body">
   <div class="grp">KEYBOARD + MOUSE</div><div class="ctab">${r('Move','WASD')}${r('Jump (double)','SPACE')}${r('Dash','SHIFT')}${r('Fire','LEFT CLICK')}${r('Aim / alt fire','RIGHT CLICK')}${r('Reload · vent misfire','R')}${r('Switch weapon','1 2 3 4 · WHEEL · Q')}${r('Mending Light (heal)','F')}${r('Arcane Bomb','G')}${r('Emberfall (when charged)','E')}${r('Music on / off','M')}${r('Pause','ESC')}</div>
-  <div class="grp">CONTROLLER</div><div class="ctab">${r('Fire / aim','RT · LT')}${r('Jump · dash','A · B')}${r('Reload','X')}${r('Switch weapon','Y · RB')}${r('Arcane Bomb','LB')}${r('Emberfall · heal','D-PAD UP · DOWN')}${r('Pause','START')}</div>
+  <div class="grp">CONTROLLER</div><div class="ctab">${r('Fire / aim','RT · LT')}${r('Jump','A')}${r('Dash','LB · B')}${r('Reload','X')}${r('Switch weapon','Y · D-PAD →')}${r('Arcane Bomb','RB')}${r('Emberfall · heal','D-PAD UP · DOWN')}${r('Pause','START')}</div>
   <div class="grp">THE RUN</div><p>Kill <b>${EMBER_NEED} enemies</b> to charge <b>Emberfall</b>: a burning greatsword with 3 strikes that send fire waves through the arena.</p>
   <p>After each room, choose a <b>boon</b>. Boons stack up to level III and pair into <b>synergies</b>. The strongest carry a <b>drawback</b>.</p>
   <p>Glowing enemies are winding up an attack: dash out. Red arcs show where damage came from. Yellow arrows warn of incoming fire. Firing builds <b>mana heat</b>; let it cool or press R to vent a misfire.</p>
@@ -3563,8 +3563,8 @@ function pollPad(dt){const gp=pickPad();
   if(G.state==='play'){
     PAD.fire=rt>.35;
     if(SET.adsToggle){if(ltOn&&!PAD.ltPrev)P.adsOn=!P.adsOn;PAD.aim=false;}else PAD.aim=ltOn;
-    if(pr(0))jump();if(pr(1)||pr(10))dash();if(pr(4))bombThrow();if(pr(2))startReload();if(pr(12))activateSword();if(pr(13))healCast();
-    const n=G.weapons.length;if(pr(3)||pr(5)||pr(15))switchTo((G.cur+1)%n);if(pr(14))switchTo((G.cur-1+n)%n);
+    if(pr(0))jump();if(pr(4)||pr(1)||pr(10))dash();if(pr(5))bombThrow();if(pr(2))startReload();if(pr(12))activateSword();if(pr(13))healCast();
+    const n=G.weapons.length;if(pr(3)||pr(15))switchTo((G.cur+1)%n);if(pr(14))switchTo((G.cur-1+n)%n);
     if(pr(9)||pr(8))pause();
     // look: curved response, slower while aiming, light aim-slowdown over enemies
     const curve=v=>Math.sign(v)*Math.pow(Math.abs(v),1.8);let k=3.6*SET.padSens*lerp(1,adsRatio(),ease(P.ads));
