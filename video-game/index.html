@@ -3251,7 +3251,10 @@ const SDEF=[
  ['controls','AIMING','sens','Mouse sensitivity','rng',[.2,3,2],'How fast the camera turns with the mouse.'],
  ['controls','AIMING','padSens','Controller look speed','rng',[.3,3,2],'How fast the right stick turns the camera.'],
  ['controls','AIMING','invertY','Invert look Y','seg',OF,'Push up to look down, like a flight stick.'],
- ['controls','CONTROLLER','_pad','Controller','info',()=>PAD.connected?PAD.name:'NOT DETECTED · PRESS ANY BUTTON','Plug in or pair a controller, then press any button on it.'],
+ ['controls','CONTROLLER','_pad','Controller','info',()=>PAD.connected?PAD.name+(PAD.std?'':' ⚠'):'NOT DETECTED · PRESS ANY BUTTON','Plug in or pair a controller, then press any button on it.'],
+ ['controls','CONTROLLER','_padSt','Layout','dbg','padSt','STANDARD means the browser recognised an Xbox-style controller and every button and stick is right. GENERIC means the browser could not identify it (common on Windows), so the right stick or triggers can be wrong. Use RECONNECT or LEARN below to fix it.'],
+ ['controls','CONTROLLER','_padRc','Reconnect controller','act',[['RECONNECT','padReconnect()'],['RELOAD PAGE','location.reload()']],'Drops the controller and finds it again. If it still says GENERIC: 1) unplug it, or hold the Xbox button to turn it off, 2) wait 5 seconds, 3) reconnect and press A, then RECONNECT. Still generic? Close Steam and Xbox Game Bar, try a USB cable, then RELOAD PAGE (this ends a run in progress).'],
+ ['controls','CONTROLLER','_padLn','Map right stick + triggers','act',[['LEARN','padLearnToggle()'],['RESET','padMapReset()']],'For GENERIC controllers. Press LEARN, then follow the prompts: push the right stick up, then right, then squeeze the right trigger, then the left. Saved for this controller in this browser. RESET goes back to automatic.'],
  ['controls','CONTROLLER','_padDbg','Controller test','dbg',null,'Live readout of the controller the game is reading. Use it to check every button and stick registers.'],
  ['video','SCREEN','res','Pixel resolution','seg',[['CHUNKY','CHUNKY'],['MEDIUM','MEDIUM'],['SHARP','SHARP']],'How many pixels the 3D world renders at. Chunky is the most retro and the fastest.'],
  ['video','SCREEN','crtOn','CRT filter','seg',OF,'Scanlines, a slight colour fringe and a soft vignette over the whole screen, like an old tube monitor.'],
@@ -3279,7 +3282,7 @@ function settingsScreen(back,keep){G.setBack=back;const tab=G.setTab||(G.setTab=
   SDEF.forEach((d,i)=>{if(d[0]!==tab)return;if(d[1]!==grp){grp=d[1];rows+=`<div class="grp">${grp}</div>`;}const k=d[2];let c='';
     if(d[4]==='seg')c=`<div class="seg">${d[5].map((o,j)=>`<button class="${SET[k]===o[0]?'a':''}" onclick="setSeg('${k}',${j})">${o[1]}</button>`).join('')}</div>`;
     else if(d[4]==='rng'){const [mn,mx,f]=d[5],v=+SET[k],p=(v-mn)/(mx-mn)*100;c=`<div class="sld"><input type="range" min="${mn}" max="${mx}" step="0.05" value="${v}" style="--p:${p}%" oninput="setVal('${k}',this.value);this.style.setProperty('--p',((this.value-${mn})/${mx-mn}*100)+'%')"><b id="v_${k}">${f==='%'?Math.round(v*100)+'%':v.toFixed(2)}</b></div>`;}
-    else if(d[4]==='info')c=`<span class="info">${d[5]()}</span>`;else c=`<span class="info" id="padDbg">—</span>`;
+    else if(d[4]==='info')c=`<span class="info">${d[5]()}</span>`;else if(d[4]==='act')c=`<div class="seg">${d[5].map(o=>`<button onclick="${o[1]}">${o[0]}</button>`).join('')}</div>`;else c=`<span class="info" id="${d[5]||'padDbg'}" style="white-space:pre-line;text-align:right;font-size:10px">—</span>`;
     rows+=`<div class="srow" data-i="${i}" onmouseenter="setDesc(${i})"><span class="l">${d[3]}</span>${c}</div>`;});
   const first=SDEF.findIndex(d=>d[0]===tab);
   show(`<div class="pnl stg"><div class="hd"><h2>SETTINGS</h2><div class="sp"></div><div class="hint"><span><span class="kcp g">Q</span> <span class="kcp g">E</span> &nbsp;TABS</span><span><span class="kcp g">ESC</span> &nbsp;BACK</span></div></div>
@@ -3494,6 +3497,52 @@ function pickPad(){let ps=[];try{ps=navigator.getGamepads?[...navigator.getGamep
 /* radial deadzone + outer clamp (Xbox sticks on Windows rest ~0.1-0.2 off-centre and overshoot 1.0 at the corners) */
 function stick(x,y,d){x=x||0;y=y||0;const m=Math.hypot(x,y);if(m<d)return[0,0];const k=Math.min(1,(m-d)/(.95-d))/m;return[x*k,y*k];}
 let gpIdx=0;
+/* v88: Windows browsers sometimes expose an Xbox pad as a GENERIC device (mapping '' instead of 'standard').
+   Then the axes/buttons come in raw HID/DirectInput order, so the right stick and triggers sit on other indexes.
+   We guess a layout from the resting axes, let the player learn it in Settings, and offer a reconnect. */
+const PMK='cousinquest.padmap';let PMAP={},PLRN=null,PRC=null;try{PMAP=JSON.parse(localStorage.getItem(PMK)||'{}')||{};}catch(e){}
+function pmSave(){try{localStorage.setItem(PMK,JSON.stringify(PMAP));}catch(e){}}
+const PMSTD={rx:{t:'a',i:2,s:1},ry:{t:'a',i:3,s:1},lt:{t:'b',i:6},rt:{t:'b',i:7}};
+function pmGuess(gp){const r=PAD.rest||gp.axes,n=gp.axes.length,stk=[],trg=[];
+  for(let i=2;i<n;i++){const v=r[i]||0;if(Math.abs(v)>1.05)continue;/* hat/d-pad axis */if(v<-.8)trg.push(i);else if(Math.abs(v)<.35)stk.push(i);}
+  const m={lt:{t:'b',i:6},rt:{t:'b',i:7}};
+  if(n===5){m.rx={t:'a',i:3,s:1};m.ry={t:'a',i:4,s:1};}/* DirectInput: Z = both triggers, Rx/Ry = right stick */
+  else{m.rx={t:'a',i:stk[0]!==undefined?stk[0]:2,s:1};m.ry={t:'a',i:stk[1]!==undefined?stk[1]:3,s:1};}
+  if(trg.length>=2){m.lt={t:'a',i:trg[0],b:-1,f:1};m.rt={t:'a',i:trg[1],b:-1,f:1};}
+  return m;}
+function padMap(gp){const k=gp.index+'|'+gp.id+'|'+gp.mapping;if(PAD.mkey===k&&PAD.map)return PAD.map;
+  const base=gp.mapping==='standard'?PMSTD:pmGuess(gp),c=PMAP[gp.id+'|'+gp.mapping];PAD.map=Object.assign({},base,c||{});PAD.custom=!!c;PAD.mkey=k;return PAD.map;}
+function pmAx(gp,m){if(!m)return 0;if(m.t==='b'){const b=gp.buttons[m.i];return b&&(b.pressed||b.value>.5)?1:0;}return(gp.axes[m.i]||0)*(m.s||1);}
+function pmTr(gp,m,tv){if(!m)return 0;if(m.t==='b')return tv(m.i);const v=gp.axes[m.i]||0;return clamp((v-m.b)/((m.f-m.b)||1),0,1);}
+const PLSTEP=['PUSH THE RIGHT STICK UP','PUSH THE RIGHT STICK RIGHT','SQUEEZE THE RIGHT TRIGGER (FIRE)','SQUEEZE THE LEFT TRIGGER (AIM)'],PLKEY=['ry','rx','rt','lt'];
+function padLearnToggle(){if(PLRN){PLRN=null;toast('MAPPING CANCELLED','#ff8a96');return;}
+  if(!PAD.gp){toast('PRESS A BUTTON ON THE CONTROLLER FIRST','#ff8a96');return;}PLRN={step:0,t:0,base:null,res:{},hit:null};toast(PLSTEP[0],'#ffe94a');}
+function padMapReset(){const g=PAD.gp;if(g&&PMAP[g.id+'|'+g.mapping]){delete PMAP[g.id+'|'+g.mapping];pmSave();}PAD.mkey=null;PLRN=null;toast('CONTROLLER MAPPING RESET','#9fd0ff');}
+function padLearn(gp,dt){const L=PLRN,now=performance.now();if(!L.t0)L.t0=now;L.t=(now-L.t0)/1000;const prs=b=>!!(b&&(b.pressed||b.value>.5));
+  if(!L.base){L.base=gp.axes.slice();L.bb=gp.buttons.map(prs);}
+  if(L.hit){const h=L.hit;const back=h.t==='b'?!prs(gp.buttons[h.i]):Math.abs((gp.axes[h.i]||0)-L.base[h.i])<.3;
+    if(back||L.t>4){L.res[PLKEY[L.step]]=h;L.step++;L.hit=null;L.base=null;L.t0=0;
+      if(L.step>=PLSTEP.length){PMAP[gp.id+'|'+gp.mapping]=L.res;pmSave();PAD.mkey=null;PLRN=null;toast('CONTROLLER MAPPED · SAVED','#7dffb0');}else toast(PLSTEP[L.step],'#ffe94a');}
+    return;}
+  if(L.t<.3)return;
+  if(L.t>12){L.step++;L.base=null;L.t0=0;if(L.step>=PLSTEP.length){if(Object.keys(L.res).length){PMAP[gp.id+'|'+gp.mapping]=L.res;pmSave();PAD.mkey=null;}PLRN=null;toast('MAPPING DONE','#9fd0ff');}else toast(PLSTEP[L.step],'#ffe94a');return;}
+  const used=Object.values(L.res).filter(h=>h.t==='a').map(h=>h.i);let best=-1,bd=.6;
+  gp.axes.forEach((v,i)=>{const b=L.base[i];if(Math.abs(b)>1.05||Math.abs(v)>1.05||used.includes(i))return;if(L.step<2&&i<2)return;const d=Math.abs(v-b);if(d>bd){bd=d;best=i;}});
+  if(best>=0){const v=gp.axes[best],b=L.base[best];
+    L.hit=L.step===0?{t:'a',i:best,s:v<b?1:-1}:L.step===1?{t:'a',i:best,s:v>b?1:-1}:{t:'a',i:best,b:Math.round(b*100)/100,f:v>b?1:-1};}
+  else if(L.step>=2){const j=gp.buttons.findIndex((x,i)=>prs(x)&&!L.bb[i]);if(j>=0)L.hit={t:'b',i:j};}}
+function padReconnect(){PAD.connected=false;PAD.gp=null;PAD.idx=-1;PAD.prev=[];PAD.rest=null;PAD.mkey=null;PAD.lost=0;PAD.warnT=0;PLRN=null;PRC={t:performance.now()};
+  toast('LOOKING FOR CONTROLLERS…','#9fd0ff');}
+function padStatus(){let ps=[];try{ps=[...(navigator.getGamepads?navigator.getGamepads():[])].filter(Boolean);}catch(e){}
+  if(PLRN)return'▶ '+PLSTEP[PLRN.step]+(PLRN.hit?' · LET GO':' · '+Math.max(0,Math.ceil(12-PLRN.t))+'s');
+  const g=PAD.gp;if(!g)return ps.length?'PRESS ANY BUTTON ON THE CONTROLLER':'NO CONTROLLER SEEN · PLUG IN / TURN ON, THEN PRESS A';
+  const fresh=PRC&&performance.now()-PRC.t<6000;
+  if(g.mapping==='standard')return(fresh?'RECONNECTED · ':'')+'STANDARD · ALL GOOD'+(PAD.custom?' · CUSTOM MAP':'');
+  return'⚠ GENERIC LAYOUT'+(PAD.custom?' · CUSTOM MAP ACTIVE':' · RIGHT STICK MAY BE WRONG')+'\nUNPLUG, WAIT 5s, REPLUG + PRESS A · OR USE LEARN';}
+function padUiTick(){const st=document.getElementById('padSt');if(st)st.textContent=padStatus();
+  const el=document.getElementById('padDbg');if(el){const g=PAD.gp;
+    el.textContent=g?('#'+g.index+' '+(g.mapping||'GENERIC')+' · '+(navigator.getGamepads?[...navigator.getGamepads()].filter(Boolean).length:0)+' pad(s)\nAXES '+g.axes.slice(0,8).map(a=>(a>=0?'+':'')+a.toFixed(2)).join(' ')+'\nBTN '+g.buttons.map((b,i)=>b&&(b.pressed||b.value>.1)?i:'').filter(x=>x!=='').join(',')+(g.mapping==='standard'&&!PAD.custom?'':'\nRS '+PAD.map.rx.i+'/'+PAD.map.ry.i+' TRIG '+PAD.map.lt.t+PAD.map.lt.i+'/'+PAD.map.rt.t+PAD.map.rt.i)):'no input';}}
+addEventListener('gamepadconnected',()=>{PAD.mkey=null;});addEventListener('gamepaddisconnected',()=>{PAD.mkey=null;});
 const dz=(v,d)=>Math.abs(v)<d?0:(v-Math.sign(v)*d)/(1-d);
 function rumble(s,w,ms){try{const g=PAD.gp;if(g&&g.vibrationActuator)g.vibrationActuator.playEffect('dual-rumble',{duration:ms,strongMagnitude:s,weakMagnitude:w});}catch(e){}}
 function relAngle(x,z){const dx=x-P.x,dz2=z-P.z;const rc=dx*Math.cos(P.yaw)-dz2*Math.sin(P.yaw),fc=-dx*Math.sin(P.yaw)-dz2*Math.cos(P.yaw);return Math.atan2(rc,fc);}
@@ -3501,14 +3550,16 @@ function pollPad(dt){const gp=pickPad();
   if(!gp){PAD.fire=PAD.aim=false;PAD.lx=PAD.ly=PAD.rx=PAD.ry=0;PAD.gp=null;
     if(PAD.connected){PAD.lost+=dt;if(PAD.lost>.75){PAD.connected=false;PAD.idx=-1;toast('CONTROLLER DISCONNECTED','#ff8a96');}}return;}
   PAD.lost=0;
-  if(gp.index!==PAD.idx){PAD.idx=gp.index;PAD.prev=gp.buttons.map(b=>!!(b&&(b.pressed||b.value>.5)));}
+  if(gp.index!==PAD.idx){PAD.idx=gp.index;PAD.prev=gp.buttons.map(b=>!!(b&&(b.pressed||b.value>.5)));PAD.rest=gp.axes.slice();PAD.mkey=null;}
   PAD.gp=gp;PAD.std=gp.mapping==='standard';
-  if(!PAD.connected){PAD.connected=true;PAD.name=(gp.id||'Controller').replace(/\(.*?\)/g,'').trim().slice(0,32).toUpperCase()||'CONTROLLER';toast(PAD.std?'CONTROLLER CONNECTED':'CONTROLLER CONNECTED · NON-STANDARD LAYOUT','#9fd0ff');ensureAudio();}
+  if(!PAD.connected){PAD.connected=true;PAD.name=(gp.id||'Controller').replace(/\(.*?\)/g,'').trim().slice(0,32).toUpperCase()||'CONTROLLER';toast(PAD.std?'CONTROLLER CONNECTED':'CONTROLLER IN GENERIC MODE','#ffb35a');if(!PAD.std)setTimeout(()=>toast('STICK WRONG? SETTINGS › CONTROLS › RECONNECT','#ffb35a'),900);ensureAudio();}
+  const PM=padMap(gp);
+  if(PLRN){PAD.fire=PAD.aim=false;PAD.lx=PAD.ly=PAD.rx=PAD.ry=0;padLearn(gp,dt);PAD.ltPrev=false;PAD.prev=gp.buttons.map(b=>!!(b&&(b.pressed||b.value>.5)));return;}
   const bt=i=>!!(gp.buttons[i]&&(gp.buttons[i].pressed||gp.buttons[i].value>.5)),pr=i=>bt(i)&&!PAD.prev[i];
   const ax=i=>gp.axes[i]||0;
-  [PAD.lx,PAD.ly]=stick(ax(0),ax(1),.2);[PAD.rx,PAD.ry]=stick(ax(2),ax(3),.18);
+  [PAD.lx,PAD.ly]=stick(ax(0),ax(1),.2);[PAD.rx,PAD.ry]=stick(pmAx(gp,PM.rx),pmAx(gp,PM.ry),.18);
   const tv=i=>{const b=gp.buttons[i];return b?(typeof b.value==='number'&&b.value>0?b.value:(b.pressed?1:0)):0;};
-  const lt=tv(6),rt=tv(7),ltOn=lt>.4;
+  const lt=pmTr(gp,PM.lt,tv),rt=pmTr(gp,PM.rt,tv),ltOn=lt>.4;
   if(G.state==='play'){
     PAD.fire=rt>.35;
     if(SET.adsToggle){if(ltOn&&!PAD.ltPrev)P.adsOn=!P.adsOn;PAD.aim=false;}else PAD.aim=ltOn;
@@ -3899,7 +3950,7 @@ function frame(now){requestAnimationFrame(frame);document.body.classList.toggle(
   else if(G.state==='title'){P.yaw+=dt*.12;G.time+=dt;}
   else if(G.state==='edit')edUpdate(dt);
   P.shake=Math.max(0,P.shake-dt*1.4);
-  render();if(G.state==='play'||G.state==='pause')hud();{const el=document.getElementById('padDbg');if(el){const g=PAD.gp;el.textContent=g?('#'+g.index+' '+(g.mapping||'no-map')+' · '+(navigator.getGamepads?[...navigator.getGamepads()].filter(Boolean).length:0)+' pad(s)\nAXES '+g.axes.slice(0,4).map(a=>(a>=0?'+':'')+a.toFixed(2)).join(' ')+'\nBTN '+g.buttons.map((b,i)=>b&&(b.pressed||b.value>.1)?i:'').filter(x=>x!=='').join(',')):'no input';}}try{musTick();}catch(e){}try{jamTick();}catch(e){}}
+  render();if(G.state==='play'||G.state==='pause')hud();padUiTick();try{musTick();}catch(e){}try{jamTick();}catch(e){}}
 // teal arcane steam + sparks off the gun (screen space, over the barrel): heavy while misfired, light wisps above 75% heat
 function steamPuff(n){const el=$('jsteam');if(!el)return;for(let k=0;k<n;k++){const i=document.createElement('i');i.style.left=rnd(55,76)+'%';i.style.top=rnd(70,94)+'%';i.style.setProperty('--dx',rnd(-7,7)+'vh');
   i.style.animationDuration=rnd(1.1,1.7)+'s';el.appendChild(i);setTimeout(()=>i.remove(),1800);}}
