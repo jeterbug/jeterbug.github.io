@@ -596,6 +596,7 @@ addEventListener('gesturestart',e=>e.preventDefault());addEventListener('dblclic
 
 <script src="monster.js"></script>
 <script src="blade.js"></script>
+<script src="fire.js"></script>
 <script>
 'use strict';
 /* ================= helpers ================= */
@@ -1166,7 +1167,7 @@ function bones(x,z){const g=groundT(x,z),B=[.78,.74,.62];
 function brazier(x,z,red){const g=groundT(x,z);
   bake(TPL.t,[x,g+.55,z],IDR,[.55,1.3,.55],{tile:TILE.wall,ts:2.2,col:tint(STONE,.8)});
   bake(TPL.bowl,[x,g+1.35,z],IDR,[1,.4,1],{col:[.16,.16,.18]});
-  G.flames.push({x,y:g+1.62,z,red});G.lights.push({x,y:g+2.3,z,c:red?[1,.28,.16]:[.38,1.1,1.25],r:red?17:21});addCyl(x,z,.45,g-1,g+1.6);}
+  G.flames.push({x,y:g+1.62,z,red});G.lights.push({x,y:g+2.3,z,c:red?[1.15,.22,.12]:[1.1,.5,.16],r:red?17:21});addCyl(x,z,.45,g-1,g+1.6);}
 function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function buildRoom(n){if(G.custom&&n===1)return buildFromMap(clone(G.custom),n);if(!G.runSeed)return buildRoom0(n);const R0=Math.random;Math.random=mulberry(G.runSeed*7919+n*104729);try{return buildRoom0(n);}finally{Math.random=R0;}}
 /* ---- data-driven rooms: every room is a map object (JSON) that can be rebuilt exactly ---- */
@@ -1865,11 +1866,11 @@ function updateBullets(dt){
   for(const t of G.trc)t.life-=dt;G.trc=G.trc.filter(t=>t.life>0);
   for(const d of G.decals)d.life-=dt;G.decals=G.decals.filter(d=>d.life>0);
   for(const b of G.eb){b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;b.life-=dt;
-    if(b.y<groundT(b.x,b.z)||solidAt(b.x,b.y,b.z)){b.life=0;burst(b.x,Math.max(b.y,.1),b.z,'#ff3a6a',5,3,.3,.1,-10);continue;}
-    const dx=b.x-P.x,dz=b.z-P.z,dy=b.y-(1+P.y);if(dx*dx+dz*dz<.5&&Math.abs(dy)<1.1){b.life=0;hurt(b.dmg,b.x-b.vx*.4,b.z-b.vz*.4,ENAME[b.src]||'A CURSED BOLT');}}
+    if(b.y<groundT(b.x,b.z)||solidAt(b.x,b.y,b.z)){b.life=0;const fp=typeof ffxBoltPal==='function'&&ffxBoltPal(b);if(fp){ffxPuff(b.x,Math.max(b.y,groundT(b.x,b.z)+.2),b.z,fp,fp==='red'?7:5,fp==='red'?1.5:1.1,2.2);burst(b.x,Math.max(b.y,.1),b.z,fp==='red'?'#ff4a2a':'#6aa8ff',4,3,.3,.08,-10);}else burst(b.x,Math.max(b.y,.1),b.z,'#ff3a6a',5,3,.3,.1,-10);continue;}
+    const dx=b.x-P.x,dz=b.z-P.z,dy=b.y-(1+P.y);if(dx*dx+dz*dz<.5&&Math.abs(dy)<1.1){b.life=0;{const fp=typeof ffxBoltPal==='function'&&ffxBoltPal(b);if(fp)ffxPuff(b.x-b.vx*.05,b.y,b.z-b.vz*.05,fp,3,.8,1.5);}hurt(b.dmg,b.x-b.vx*.4,b.z-b.vz*.4,ENAME[b.src]||'A CURSED BOLT');}}
   G.eb=G.eb.filter(b=>b.life>0);
 }
-function updateParts(dt){for(const p of G.parts){p.vy+=p.grav*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;
+function updateParts(dt){if(typeof ffxUpdate==='function')ffxUpdate(dt);for(const p of G.parts){p.vy+=p.grav*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;
   const gp=groundT(p.x,p.z)+.04;if(p.y<gp){if(p.blood){if(Math.random()<.4)addDecal(p.x,gp-.03,p.z,[0,1,0],rnd(.08,.18),p.blood,false,9);p.blood=0;}p.y=gp;p.vy*=-.3;p.vx*=.7;p.vz*=.7;}p.life-=dt;}
   G.parts=G.parts.filter(p=>p.life>0);for(const s of G.slash)s.life-=dt;G.slash=G.slash.filter(s=>s.life>0);for(const f of G.fx)f.life-=dt;G.fx=G.fx.filter(f=>f.life>0);if(G.fxq){for(const f of G.fxq)f.t+=dt;G.fxq=G.fxq.filter(f=>f.t<f.max);}G.flash.i=Math.max(0,G.flash.i-dt*12);}
 function roomClear(){G.cleared=true;sfx('clear');
@@ -2567,7 +2568,7 @@ function monDraw(e,em){if(!monOK())return false;if(!GOB.tried){GOB.tried=1;try{g
 function monCorpse(e){if(!G.corpses)G.corpses=[];e.dt0=G.time;e.atkC=null;e.bst=null;e.rch=0;e.wind=0;e.flash=0;G.corpses.push(e);}
 // sword reach point in world space (for impact bursts)
 function monFront(e,d){return [e.x+Math.sin(e.yaw)*d,e.z+Math.cos(e.yaw)*d];}
-function monRing(e,d,cols,n){const [cx,cz]=monFront(e,d);for(let i=0;i<n;i++){const a=i/n*6.28;burst(cx+Math.cos(a)*1.6,e.gy+.2,cz+Math.sin(a)*1.6,pick(cols),1,6,.6,.25,-8);}}
+function monRing(e,d,cols,n){const [cx,cz]=monFront(e,d);if(typeof ffxEmit==='function'){const m=Math.round(n*.8);for(let i=0;i<m;i++){const a=i/m*6.28+Math.random()*.2,r=1.4+Math.random()*.5;ffxEmit(cx+Math.cos(a)*r,e.gy+.35,cz+Math.sin(a)*r,Math.cos(a)*3.2,.8+Math.random(),Math.sin(a)*3.2,.55+Math.random()*.3,1.5+Math.random()*.6,'red',{grow:1.9,rise:1.6,drag:2.6,k:.45});}}for(let i=0;i<n;i++){const a=i/n*6.28;burst(cx+Math.cos(a)*1.6,e.gy+.2,cz+Math.sin(a)*1.6,pick(cols),1,6,.6,.25,-8);}}
 // boss brain with the monster's clips. returns [mx,mz,sp]
 function monAI(e,dt,dx,dz,dist,nx,nz,sp){const p2=e.hp<e.max*.5;
   const face=k=>{let a=Math.atan2(dx,dz)-e.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));e.yaw+=a*Math.min(1,dt*k);};
@@ -2601,7 +2602,7 @@ function monAI(e,dt,dx,dz,dist,nx,nz,sp){const p2=e.hp<e.max*.5;
   else if(dist>6.5&&e.mcd<=0&&e.atk<=0){e.bst='magic';e.bt=0;e.fired=0;e.mcd=p2?3.4:5;e.atk=.8;return [0,0,0];}
   if(e.atkC){e.bst='atk';e.bt=0;e.hd=[];e.windMax=MONATK[e.atkC].hits[0]/30/MONATK[e.atkC].rate;sfx('bwind',e.x,e.z);return [0,0,0];}
   face(3);e._run=p2&&dist>12;if(dist>4.5)return [nx,nz,sp*(e._run?2:1)];return [0,0,0];}
-function explodeFx(e){for(let i=0;i<24;i++)burst(e.x+rnd(-2,2),e.gy+rnd(.1,1),e.z+rnd(-2,2),pick(['#ff7a2f','#ffd14a','#5a4a40']),1,rnd(4,9),rnd(.4,.9),rnd(.15,.3),-8);G.flash={x:e.x,y:e.gy+1,z:e.z,i:2,r:12,c:[1.2,.6,.2]};}
+function explodeFx(e){if(typeof ffxPuff==='function')ffxPuff(e.x,e.gy+.6,e.z,'red',26,2.2,5);for(let i=0;i<24;i++)burst(e.x+rnd(-2,2),e.gy+rnd(.1,1),e.z+rnd(-2,2),pick(['#ff7a2f','#ffd14a','#5a4a40']),1,rnd(4,9),rnd(.4,.9),rnd(.15,.3),-8);G.flash={x:e.x,y:e.gy+1,z:e.z,i:2,r:12,c:[1.2,.6,.2]};}
 
 function skDraw(e,em){if(!GOB.tried){GOB.tried=1;try{gobLoad();}catch(err){console.error(err);}}if(!SK.tried){try{skLoad();}catch(err){console.error(err);}}
   if(!GOB.p||SK.ready<3)return false;const pm=PP.main,u=GOB.u;
@@ -2675,9 +2676,8 @@ function render(){
   gl.uniform3fv(U.uLP,LP);gl.uniform3fv(U.uLC,LC);gl.uniform1fv(U.uLR,LR);gl.uniform1f(U.uTime,G.time);
   gl.depthMask(false);gl.disable(gl.DEPTH_TEST);box(cx,cy,cz,170,170,170,0,0,0,WHITE,null,-1,1,2);gl.enable(gl.DEPTH_TEST);gl.depthMask(true);
   if(G.world&&G.world.n)boxR(0,0,0,1,1,1,IDR,WHITE,null,-1,1,false,G.world);
-  for(const f of G.flames){const k=.85+.15*Math.sin(G.time*17+f.x)+rnd(-.08,.08),c1=C(f.red?'#ff5a30':'#6fe8ff'),c2=C(f.red?'#ffc060':'#d8ffff');
-    box(f.x,f.y+.12*k,f.z,.36*k,.55*k,.36*k,G.time*2,0,0,c1,null,-1,1,true,MESH.s);box(f.x,f.y+.05,f.z,.18*k,.32*k,.18*k,-G.time*3,0,0,c2,null,-1,1,true,MESH.s);
-    if(G.state==='play'&&Math.random()<.25)burst(f.x+rnd(-.2,.2),f.y+.3,f.z+rnd(-.2,.2),f.red?'#ffb050':'#9ff6ff',1,1,.8,.06,4);}
+  for(const f of G.flames){if(typeof ffxDraw!=='function'){const k=.85+.15*Math.sin(G.time*17+f.x),c1=C(f.red?'#ff3a20':'#ff8a2a');box(f.x,f.y+.12*k,f.z,.36*k,.55*k,.36*k,G.time*2,0,0,c1,null,-1,1,true,MESH.s);}
+    if(G.state==='play'&&Math.random()<.2)burst(f.x+rnd(-.2,.2),f.y+.5,f.z+rnd(-.2,.2),f.red?'#ff5a3a':'#ffb050',1,1.2,1,.05,4);}
   for(const s of G.stat){if(s.fogK!==undefined)gl.uniform1f(U.uFogK,s.fogK);box(s.x,s.y,s.z,s.w,s.h,s.d,0,0,0,s.col||WHITE,null,s.tile!==undefined?s.tile:-1,s.ts||1,s.unlit);if(s.fogK!==undefined)gl.uniform1f(U.uFogK,1);}
   for(const p of G.puddles){const k=Math.min(1,p.t/1.5)*p.r*2;let col,unlit=false;
     if(p.burn>0){col=flk()?C('#ff6a1a'):C('#ffb030');unlit=true;}else col=p.ignite>=0?C('#5a3010'):C('#1c180f');
@@ -2722,7 +2722,7 @@ function render(){
   if(SET.tracers){for(const b of G.bullets){const t=tracerPts(b);drawTracer(t[0],t[1],b,1);}for(const t of G.trc)drawTracer(t.a,t.b,t.b0,t.life/t.max);}
   else for(const b of G.bullets){const l=Math.hypot(b.vx,b.vy,b.vz);box(b.x,b.y,b.z,b.size*1.6,b.size*1.6,b.size*7,Math.atan2(b.vx,b.vz),-Math.asin(b.vy/l),0,b.c,null,-1,1,true,MESH.s);}
   bombDraw();
-  for(const b of G.eb){const k=.9+.15*Math.sin(G.time*20+b.x);box(b.x,b.y,b.z,.42*k,.42*k,.42*k,G.time*6,G.time*4,0,C('#ff3a4a'),null,-1,1,true,MESH.s);box(b.x,b.y,b.z,.22,.22,.22,0,0,0,C('#ffe0c0'),null,-1,1,true,MESH.s);
+  for(const b of G.eb){if(typeof ffxBoltPal==='function'&&ffxBoltPal(b))continue;const k=.9+.15*Math.sin(G.time*20+b.x);box(b.x,b.y,b.z,.42*k,.42*k,.42*k,G.time*6,G.time*4,0,C('#ff3a4a'),null,-1,1,true,MESH.s);box(b.x,b.y,b.z,.22,.22,.22,0,0,0,C('#ffe0c0'),null,-1,1,true,MESH.s);
     if(Math.random()<.3)burst(b.x,b.y,b.z,'#ff5a3a',1,.6,.3,.08,0);}
   for(const p of G.parts){const s=p.size*(p.life/p.max);if(p.st){const v=Math.hypot(p.vx,p.vy,p.vz)||1,L=Math.max(s*2,v*.028);box(p.x,p.y,p.z,s*.6,s*.6,L,Math.atan2(p.vx,p.vz),-Math.asin(clamp(p.vy/v,-1,1)),0,p.c,null,-1,1,true,MESH.s);}else box(p.x,p.y,p.z,s,s,s,0,0,0,p.c,null,-1,1,true);}
   for(const s of G.slash){const f=s.life/s.max;seg(s.a,s.b,.03+.1*f,C(f>.5?'#ffffff':flk()?'#ffd060':'#ff7a2f'),false);}
@@ -2731,7 +2731,7 @@ function render(){
     for(let pass=0;pass<2;pass++){let prev=a,mid=null;for(let i=1;i<=n;i++){const t=i/n,j=i===n?0:J*Math.sin(t*Math.PI);const p=[a[0]+(b[0]-a[0])*t+rnd(-j,j),a[1]+(b[1]-a[1])*t+rnd(-j,j),a[2]+(b[2]-a[2])*t+rnd(-j,j)];
       seg(prev,p,.2*k+.05,C('#1fd8c0'),false);seg(prev,p,.05+.03*k,C('#e8fffb'),false);if(i===4)mid=p;prev=p;}
       if(mid&&Math.random()<.8){let q=mid;for(let i=0;i<3;i++){const p2=[q[0]+rnd(-.7,.7),q[1]+rnd(-.8,.2),q[2]+rnd(-.7,.7)];seg(q,p2,.05,C(flk()?'#7ffff0':'#ffffff'),false);q=p2;}}}}
-  rfBoltDraw();drawRiftPortals();
+  rfBoltDraw();drawRiftPortals();if(typeof ffxDraw==='function')ffxDraw();
   if(G.state==='play'||G.state==='pause'){gl.clear(gl.DEPTH_BUFFER_BIT);
   if(ARMS.dbg){const d=ARMS.dbg,Rd=rotM(d.yaw,d.pitch,0),o=mv3(Rd,[0,0,d.dist]),tg=[cx+d.tg[0],cy+d.tg[1],cz+d.tg[2]];gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);setCamera(tg[0]+o[0],tg[1]+o[1],tg[2]+o[2],Rd,40);}
   drawViewmodel(cx,cy,cz,Rcam);}
@@ -3378,7 +3378,7 @@ function sfx(t,px,pz){if(!AC)return;if(!GDS.busy)gobDeathLoad();if((t==='shoot'|
 
 /* ================= level editor ================= */
 const ED_TOOLS=[['select','SELECT / MOVE'],['tree','TREE'],['mesa','MESA'],['ruin','RUIN PLATFORM'],['wall','RUINED WALL'],['stone','STANDING STONE'],['boulder','BOULDER'],['log','FALLEN LOG'],
-  ['shrooms','MUSHROOMS'],['bones','BONES'],['stump','TREE STUMP'],['roots','ROOT TANGLE'],['branches','DEAD BRANCHES'],['brazier','BRAZIER TEAL'],['redbrazier','BRAZIER RED'],['hill','HILL'],['hollow','HOLLOW'],['plateau','PLATEAU'],
+  ['shrooms','MUSHROOMS'],['bones','BONES'],['stump','TREE STUMP'],['roots','ROOT TANGLE'],['branches','DEAD BRANCHES'],['brazier','BRAZIER'],['redbrazier','BRAZIER RED'],['hill','HILL'],['hollow','HOLLOW'],['plateau','PLATEAU'],
   ['spawn','PLAYER START'],['exit','EXIT PORTAL'],['ammo','AMMO'],['health','HEALTH']];
 const ED_NAME=Object.fromEntries(ED_TOOLS);
 const FEATK={hill:{r:6,dh:1.6,k:'s'},hollow:{r:6,dh:-2,k:'s'},plateau:{r:5,dh:2,k:'c'}};
