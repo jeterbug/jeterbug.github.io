@@ -1874,7 +1874,7 @@ function updatePlayer(dt){const s=S();
   const aimIn=SET.adsToggle?P.adsOn:(P.adsHeld||PAD.aim);const adsWant=aimIn&&P.reloadT<=0&&P.raiseT<=0&&!SW.on&&!w.melee;P.ads+=((adsWant?1:0)-P.ads)*Math.min(1,dt*14);if(P.ads<.001)P.ads=0;
   P.fireCd-=dt;if(G.overheat>0)G.overheat-=dt;
   if(G.heatCool>0)G.heatCool-=dt;else G.heat=Math.max(0,(G.heat||0)-12*dt);
-  bladeUpd(dt);if(SW.on)updateSword(dt);else if(firing||PAD.fire){let n=0;while(n<4&&tryFire()&&P.fireCd<=0)n++;}
+  bladeUpd(dt);if(SW.on)updateSword(dt);else if(firing||PAD.fire){const w0=curW(),semi=w0.id==='cannon'||w0.id==='shotgun';if(!semi||!P.semiLock){let n=0,any=false;while(n<4){if(!tryFire())break;any=true;n++;if(P.fireCd>0)break;}if(semi&&any)P.semiLock=true;}}if(!(firing||PAD.fire))P.semiLock=false;
   if(G.portal&&Math.hypot(P.x-G.portal.x,P.z-G.portal.z)<(G.room===BOSS_ROOM-1?2.4:2)&&Math.abs(P.y-G.portal.y)<2.5)nextRoom();
 }
 
@@ -2110,7 +2110,7 @@ function vmAnim(vm,id){vm=Object.assign({},vm,{lh:castLH(vm)});const r={gp:0,gr:
     r.lh=kf([[0,vm.lh],[.14,[-.15,.03,-.25]],[.28,[-.15,.03,-.2]],[.45,DOWN],[.66,[-.15,.01,-.02]],[.78,[-.15,.01,-.06]],[.92,vm.lh],[1,vm.lh]],t);
     if(t>=.45&&t<.72)r.handItem='loader';}
   return r;}
-const GD={rifle:{p:[-.105,.02,.05],r:[-.9,0,0],w:.16,h:.09,dh:.055},cannon:{p:[-.074,0,-.12],r:[0,1.5708,0],w:.11,h:.065,dh:.042},shotgun:{p:[0,.222,-.6],r:[0,-1.25,0],w:.11,h:.072,dh:.048}};
+const GD={rifle:{p:[-.105,.02,.05],r:[-.9,0,0],w:.16,h:.09,dh:.055},shotgun:{p:[0,.222,-.6],r:[0,-1.25,0],w:.11,h:.072,dh:.048}};
 const SEG7=[0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f];
 function gunDisp(toW,RW,id,Rx){const g=GD[id];if(!g||SET.gunDisp===false)return;const a=G.ammo[id];if(!a)return;
   const RL=rotM(g.r[0],g.r[1],g.r[2]),Rw=mul3(RW,Rx?mul3(Rx.R,RL):RL),off=Rx?Rx.t:[0,0,0];
