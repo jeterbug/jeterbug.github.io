@@ -1874,7 +1874,7 @@ function updatePlayer(dt){const s=S();
   const aimIn=SET.adsToggle?P.adsOn:(P.adsHeld||PAD.aim);const adsWant=aimIn&&P.reloadT<=0&&P.raiseT<=0&&!SW.on&&!w.melee;P.ads+=((adsWant?1:0)-P.ads)*Math.min(1,dt*14);if(P.ads<.001)P.ads=0;
   P.fireCd-=dt;if(G.overheat>0)G.overheat-=dt;
   if(G.heatCool>0)G.heatCool-=dt;else G.heat=Math.max(0,(G.heat||0)-12*dt);
-  bladeUpd(dt);if(SW.on)updateSword(dt);else if(firing||PAD.fire){let n=0;while(n<4&&tryFire()&&P.fireCd<=0)n++;}
+  bladeUpd(dt);if(SW.on)updateSword(dt);else if(firing||PAD.fire){const w0=curW(),semi=w0.id==='cannon'||w0.id==='shotgun';if(!semi||!P.semiLock){let n=0,any=false;while(n<4){if(!tryFire())break;any=true;n++;if(P.fireCd>0)break;}if(semi&&any)P.semiLock=true;}}if(!(firing||PAD.fire))P.semiLock=false;
   if(G.portal&&Math.hypot(P.x-G.portal.x,P.z-G.portal.z)<(G.room===BOSS_ROOM-1?2.4:2)&&Math.abs(P.y-G.portal.y)<2.5)nextRoom();
 }
 
@@ -2110,7 +2110,7 @@ function vmAnim(vm,id){vm=Object.assign({},vm,{lh:castLH(vm)});const r={gp:0,gr:
     r.lh=kf([[0,vm.lh],[.14,[-.15,.03,-.25]],[.28,[-.15,.03,-.2]],[.45,DOWN],[.66,[-.15,.01,-.02]],[.78,[-.15,.01,-.06]],[.92,vm.lh],[1,vm.lh]],t);
     if(t>=.45&&t<.72)r.handItem='loader';}
   return r;}
-const GD={rifle:{p:[-.105,.02,.05],r:[-.9,0,0],w:.16,h:.09,dh:.055},cannon:{p:[-.074,0,-.12],r:[0,1.5708,0],w:.11,h:.065,dh:.042},shotgun:{p:[0,.222,-.6],r:[0,-1.25,0],w:.11,h:.072,dh:.048}};
+const GD={rifle:{p:[-.105,.02,.05],r:[-.9,0,0],w:.16,h:.09,dh:.055},shotgun:{p:[0,.222,-.6],r:[0,-1.25,0],w:.11,h:.072,dh:.048}};
 const SEG7=[0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f];
 function gunDisp(toW,RW,id,Rx){const g=GD[id];if(!g||SET.gunDisp===false)return;const a=G.ammo[id];if(!a)return;
   const RL=rotM(g.r[0],g.r[1],g.r[2]),Rw=mul3(RW,Rx?mul3(Rx.R,RL):RL),off=Rx?Rx.t:[0,0,0];
@@ -3141,19 +3141,19 @@ function lqRecord(res){if(G.lqDone||!G.runSeed)return G.lqEnd||null;G.lqDone=1;i
   h.runs++;if(win)h.wins++;if(res==='dead')h.deaths++;h.kills+=G.kills;h.shots+=G.shots;h.hits+=G.hits;h.time+=t;h.best=Math.max(h.best,room);
   if(win&&(!h.fast||t<h.fast))h.fast=t;h.bestKills=Math.max(h.bestKills,G.kills);
   for(const k in G.gunShots)h.guns[k]=(h.guns[k]||0)+G.gunShots[k];
-  h.hist.unshift({t:Date.now(),r:res,room,k:G.kills,s:G.shots,h:G.hits,d:Math.round(t),seed:G.runSeed});if(h.hist.length>60)h.hist.length=60;h.last=Date.now();
+  h.hist.unshift({t:Date.now(),r:res,room,k:G.kills,s:G.shots,h:G.hits,d:Math.round(t),seed:G.runSeed});lqQueueRun(h,Object.assign({g:G.gunShots},h.hist[0]));if(h.hist.length>60)h.hist.length=60;h.last=Date.now();setTimeout(()=>lqSync(false),50);
   lqSave();return{rec:rec.filter(Boolean),pr,nr:lqRank(h)};}
 function lqEndHtml(){const e=G.lqEnd;if(!e||!HERO)return'';if(e.test)return`<div class="lqend"><div class="lqpb gh">TEST RUN · NOT RANKED</div></div>`;
   const R=lqRanked(),i=R.indexOf(HERO),from=Math.max(0,Math.min(i-1,R.length-3));
   const rows=R.slice(from,from+3).map((h,j)=>{const n=from+j+1,me=h===HERO;return`<div class="lqmr${me?' me':''}"><span class="n"${n===1?' style="color:var(--gold)"':''}>${n}</span><span class="nm">${lqE(h.name)}</span>${me&&e.nr<e.pr?`<span class="mv">UP FROM #${e.pr}</span>`:''}<span>${h.wins} CLEAR${h.wins===1?'':'S'}</span></div>`;}).join('');
   return`<div class="lqend">${e.rec.map(r=>`<div class="lqpb">${r}!</div>`).join('')}<div class="lqruns"><div><b>${G.kills}</b><span>KILLS</span></div><div><b>${lqN(G.shots)}</b><span>SHOTS</span></div><div><b>${G.shots?Math.round(100*G.hits/G.shots)+'%':'—'}</b><span>ACCURACY</span></div><div><b>${fmt(G.runTime)}</b><span>TIME</span></div></div>${R.length>1?`<div class="lqmini"><div class="k">HALL OF LEGENDS</div>${rows}</div>`:''}</div>`;}
 /* --- WHO ENTERS? --- */
-function heroScreen(){G.state='title';$('hud').classList.add('hidden');heroBuf='';heroMsg='';const R=lqRanked();
+function heroScreen(){if(Date.now()-LQLAST>4000)lqSync(true);G.state='title';$('hud').classList.add('hidden');heroBuf='';heroMsg='';const R=lqRanked();
   const rows=R.length?R.map((h,i)=>`<button class="lqh" data-h="${lqE(h.name)}" onclick="heroPick(this.dataset.h)">${lqHex(h)}<span class="nm">${lqE(h.name)}</span><span class="sub"><b>${h.runs}</b> run${h.runs===1?'':'s'} · <b>${lqN(h.kills)}</b> kills · last played <b>${lqDay(h.last)}</b></span>${h.wins?`<span class="lqcr">${LQCROWN}${h.wins}</span>`:''}<span class="rk">#${i+1}</span></button>`).join(''):'<div class="lqnone">No heroes yet. Carve the first name below.</div>';
   const K=[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'].map(c=>`<button class="lqk" data-kg="13" onclick="heroKey('${c}')">${c}</button>`).join('')+'<button class="lqk w" data-kg="13" onclick="heroKey(\' \')">SPACE</button><button class="lqk w" data-kg="13" onclick="heroKey(null)">ERASE</button><button class="lqk w" data-kg="13" onclick="heroCreate()">DONE</button>';
   show(`<div class="lqwho"><div class="lqwl"><div class="lqkick">THE RIFT AWAITS</div><h1>WHO ENTERS?</h1><p>Choose your hero to keep your legend, or carve a new name into the stones.</p>
   <div class="ins"><span class="kcp">↑</span> <span class="kcp">↓</span> &nbsp;CHOOSE HERO<br><span class="kcp">ENTER</span> &nbsp;PLAY AS THIS HERO<br><span class="kcp g">A-Z</span> &nbsp;TYPE A NEW NAME<br><span class="kcp g">⌫</span> &nbsp;ERASE</div></div>
-  <div class="lqwr"><div class="lh">${R.length?'RETURNING HEROES <span>RANK</span>':'&nbsp;'}</div><div class="lqlist">${rows}</div>
+  <div class="lqwr"><div class="lh" style="margin-bottom:4px">${lqNetTag()}</div><div class="lh">${R.length?'RETURNING HEROES <span>RANK</span>':'&nbsp;'}</div><div class="lqlist">${rows}</div>
   <div class="lqnew" id="lqnew"><div class="top">${lqHex({col:'#4a625f',name:'+'})}<span class="nm">NEW HERO</span><div class="lqent" id="lqent"></div><button class="bt" onclick="heroCreate()">ENTER</button></div><div class="lqmsg" id="lqmsg"></div><div class="lqkb">${K}</div></div></div></div>
   <div class="lqhint">Type a name on the keyboard, or pick letters with the controller &nbsp;<span class="kcp g">A</span> add &nbsp;<span class="kcp g">B</span> erase</div>`,false,'lqw');
   heroDraw();const f=[...ov.querySelectorAll('button,.card,input[type=range]')];const j=f.findIndex(b=>b.dataset.h===LQ.cur);gpIdx=j>=0?j:(R.length?0:R.length);if(!R.length)gpIdx=f.findIndex(b=>b.dataset.kg);menuNav(0,0,false,false);}
@@ -3161,19 +3161,19 @@ function heroDraw(){const el=$('lqent');if(!el)return;let h='';for(let i=0;i<LQM
   $('lqnew').classList.toggle('on',heroBuf.length>0);$('lqmsg').textContent=heroMsg;}
 function heroKey(c){heroMsg='';if(c===null)heroBuf=heroBuf.slice(0,-1);else if(heroBuf.length<LQMAX&&!(c===' '&&(!heroBuf||heroBuf.endsWith(' '))))heroBuf+=c;heroDraw();}
 function heroCreate(){const n=heroBuf.trim().toUpperCase();if(!n){heroMsg='TYPE A NAME OR CHOOSE A HERO ABOVE';heroDraw();return;}
-  let h=lqFind(n);if(!h){h=lqNew(n);LQ.heroes.push(h);}heroUse(h);}
+  let h=lqFind(n);if(!h){h=lqNew(n);LQ.heroes.push(h);lqQueueHero(h);lqSync(false);}heroUse(h);}
 function heroPick(n){const h=lqFind(n);if(h)heroUse(h);}
 function heroUse(h){HERO=h;LQ.cur=h.name;lqSave();heroBuf='';titleScreen();}
 /* --- HALL OF LEGENDS --- */
 const LQS=[['rank','RANK'],['wins','FULL CLEARS'],['kills','KILLS'],['shots','SHOTS FIRED'],['deaths','DEATHS'],['fast','FASTEST CLEAR'],['acc','ACCURACY']];
 let lqSortI=0;
-function legendsScreen(){G.state='title';G.lqBack='lb';const key=LQS[lqSortI][0];let R=lqRanked();const rank=new Map(R.map((h,i)=>[h,i+1]));
+function legendsScreen(){if(Date.now()-LQLAST>4000)lqSync(true);G.state='title';G.lqBack='lb';const key=LQS[lqSortI][0];let R=lqRanked();const rank=new Map(R.map((h,i)=>[h,i+1]));
   if(key==='deaths')R.sort((a,b)=>(a.deaths-b.deaths)||lqCmp(a,b));else if(key==='fast')R.sort((a,b)=>((a.fast||1e9)-(b.fast||1e9))||lqCmp(a,b));else if(key==='acc')R.sort((a,b)=>(lqAccN(b)-lqAccN(a))||lqCmp(a,b));else if(key!=='rank')R.sort((a,b)=>(b[key]-a[key])||lqCmp(a,b));
   const th=['RANK','HERO','FULL CLEARS','KILLS','SHOTS FIRED','DEATHS','FASTEST CLEAR','ACCURACY'].map((t,i)=>`<span class="${(i===0&&key==='rank')||(i>1&&LQS[i-1]&&LQS[i-1][0]===key)?'s':''}">${t}</span>`).join('');
   const rows=R.map(h=>{const n=rank.get(h);return`<button class="lqtr p${n}${h===HERO?' me':''}" data-h="${lqE(h.name)}" onclick="profileScreen(this.dataset.h)"><span class="r">${n}</span><span class="h">${lqHex(h)}${lqE(h.name)}</span><span class="cl">${h.wins||'<i class="z">0</i>'}</span><span>${lqN(h.kills)}</span><span>${lqN(h.shots)}</span><span>${h.deaths}</span><span class="fc">${h.fast?fmt(h.fast):'<i class="z">--:--</i>'}</span><span>${lqAcc(h)}</span></button>`;}).join('')||'<div class="lqnone" style="text-align:center">No legends yet.</div>';
   show(`<div class="pnl lqp"><div class="hd"><div class="lqkick">THOSE WHO HAVE FACED THE CREATURE</div><h2>HALL OF LEGENDS</h2><div class="ornl"><i></i></div></div>
   <div class="lqtb"><div class="lqtr lqth">${th}</div>${rows}</div>
-  <div class="ft"><span>RANKED BY <b style="color:var(--ink)">FULL CLEARS</b>, THEN KILLS, SHOTS FIRED, FEWEST DEATHS</span><span><span class="kcp g">Q</span> <span class="kcp g">E</span> &nbsp;SORT: ${LQS[lqSortI][1]} &nbsp;&nbsp;<button class="bt gh" data-back onclick="titleScreen()">BACK</button></span></div></div>`,false,'dimx');
+  <div class="ft"><span>RANKED BY <b style="color:var(--ink)">FULL CLEARS</b>, THEN KILLS, SHOTS FIRED, FEWEST DEATHS<br><span style="font-size:10px">${lqNetTag()}</span></span><span><span class="kcp g">Q</span> <span class="kcp g">E</span> &nbsp;SORT: ${LQS[lqSortI][1]} &nbsp;&nbsp;<button class="bt gh" data-back onclick="titleScreen()">BACK</button></span></div></div>`,false,'dimx');
   const f=[...ov.querySelectorAll('button')];const j=f.findIndex(b=>b.dataset.h===(HERO&&HERO.name));if(j>=0){gpIdx=j;menuNav(0,0,false,false);}}
 /* --- HERO STATS --- */
 function profileScreen(n,back){const h=lqFind(n)||HERO;if(!h){heroScreen();return;}if(back)G.lqBack=back;G.state='title';G.lqProf=h.name;const R=lqRanked(),rk=R.indexOf(h)+1;
@@ -3186,7 +3186,7 @@ function profileScreen(n,back){const h=lqFind(n)||HERO;if(!h){heroScreen();retur
   <div class="lqtl"><b>${fmt(h.time)}</b><span>TIME PLAYED</span></div><div class="lqtl"><b>${lqAcc(h)}</b><span>ACCURACY</span></div><div class="lqtl sm"><b>${lqFav(h)}</b><span>FAVORITE GUN</span></div>
   <div class="lqtl wide"><div><span>FASTEST FULL CLEAR</span><em>Room 1 to The Creature, one life</em></div><b>${h.fast?fmt(h.fast):'--:--'}</b></div></div></div>
   <div class="lqpr"><div class="k">RUN HISTORY</div><div class="lqhr th"><span>WHEN</span><span>RESULT</span><span>KILLS</span><span>SHOTS</span><span>ACC</span><span>TIME</span><span>SEED</span></div>${rows}</div>
-  <div class="ft"><span>CLICK A RUN TO REPLAY ITS SEED${h!==HERO?' AS '+lqE(HERO?HERO.name:''):''}</span><span><button class="bt gh" onclick="lqDel(this)">DELETE HERO</button><button class="bt" data-back onclick="${back2}">BACK</button></span></div></div>`,false,'dimx');
+  <div class="ft"><span>CLICK A RUN TO REPLAY ITS SEED${h!==HERO?' AS '+lqE(HERO?HERO.name:''):''}</span><span><button class="bt" data-back onclick="${back2}">BACK</button></span></div></div>`,false,'dimx');
   const f=[...ov.querySelectorAll('button')];gpIdx=f.findIndex(b=>b.hasAttribute('data-back'));menuNav(0,0,false,false);}
 function lqDel(btn){const n=G.lqProf;if(!btn.dataset.sure){btn.dataset.sure=1;btn.textContent='PRESS AGAIN TO DELETE '+n;return;}
   LQ.heroes=LQ.heroes.filter(h=>h.name!==n);if(LQ.cur===n)LQ.cur='';lqSave();if(HERO&&HERO.name===n){HERO=null;heroScreen();}else if(G.lqBack==='lb')legendsScreen();else titleScreen();}
@@ -3206,6 +3206,52 @@ addEventListener('keydown',e=>{if(ov.classList.contains('hidden')||e.ctrlKey||e.
     else if(e.code==='KeyW'||k==='ArrowUp')menuNav(0,-1,false,false);else if(e.code==='KeyS'||k==='ArrowDown')menuNav(0,1,false,false);else if(k==='Enter'){const fe=ov.querySelector('.gpf');if(fe)fe.click();}return;}
   if(ov.querySelector('.ttln')){if(e.code==='KeyC')heroScreen();else if(e.code==='KeyL')legendsScreen();}},true);
 addEventListener('pagehide',()=>{if(G.runSeed&&!G.lqDone&&HERO&&(G.state==='play'||G.state==='pause'||G.state==='pick')){G.lqEnd=lqRecord('quit');}});
+
+/* ================= online Hall of Legends (Supabase) ================= */
+const LQURL='https://iuhcdgmjhqdforpbjamy.supabase.co',LQKEY='sb_publishable_yh9k5_J0DCF9eQV9Tbb9UQ_1EsBmMuh',LQOB='cousinquest.outbox',LQMIG='cousinquest.migrated';
+let LQOUT=[],LQNET='offline',LQSYNC=null,LQLAST=0,LQSIG='';
+try{LQOUT=JSON.parse(localStorage.getItem(LQOB)||'[]')||[];}catch(e){LQOUT=[];}
+function lqOutSave(){try{localStorage.setItem(LQOB,JSON.stringify(LQOUT));}catch(e){}}
+function lqApi(path,opt){opt=opt||{};const h=Object.assign({apikey:LQKEY,'Content-Type':'application/json'},opt.headers||{});
+  const c=new AbortController(),tm=setTimeout(()=>c.abort(),8000);
+  return fetch(LQURL+'/rest/v1/'+path,Object.assign({},opt,{headers:h,signal:c.signal})).then(r=>{clearTimeout(tm);if(!r.ok)return r.text().then(t=>{const e=new Error(r.status+' '+t);e.status=r.status;throw e;});return opt.method==='POST'?null:r.json();});}
+function lqRunRow(h,r){return{hero:h,played_at:new Date(r.t).toISOString(),result:r.r,room:Math.max(1,Math.min(BOSS_ROOM,r.room|0)),kills:r.k|0,shots:r.s|0,hits:Math.min(r.h|0,r.s|0),secs:Math.max(0,Math.round(r.d)),seed:r.seed|0,guns:r.g||{}};}
+function lqQueueHero(h){LQOUT.push({k:'h',d:{name:h.name,col:h.col,created_at:new Date(h.since).toISOString()}});lqOutSave();}
+function lqQueueRun(h,r){LQOUT.push({k:'r',d:lqRunRow(h.name,r)});lqOutSave();}
+function lqMigrate(){try{if(localStorage.getItem(LQMIG))return;localStorage.setItem(LQMIG,'1');}catch(e){return;}
+  for(const h of LQ.heroes){lqQueueHero(h);const H=h.hist.slice().reverse();H.forEach((r,i)=>{r.g=i===H.length-1?h.guns:{};lqQueueRun(h,r);});}}
+async function lqFlush(){while(LQOUT.length){const it=LQOUT[0];
+    try{if(it.k==='h')await lqApi('heroes',{method:'POST',headers:{Prefer:'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify(it.d)});
+      else await lqApi('runs',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(it.d)});}
+    catch(e){if(e.status>=400&&e.status<500&&e.status!==401&&e.status!==429){console.warn('legends: dropped bad row',e.message,it);}else throw e;}
+    LQOUT.shift();lqOutSave();}}
+function lqRebuild(heroes,runs){const by=new Map();const mk=(name,col,since)=>{let h=by.get(name);if(!h){h=lqNew(name);h.col=col||h.col;h.since=since||Date.now();h.last=h.since;by.set(name,h);}return h;};
+  for(const x of heroes)mk(x.name,x.col,Date.parse(x.created_at));
+  for(const it of LQOUT)if(it.k==='h')mk(it.d.name,it.d.col,Date.parse(it.d.created_at));
+  const all=runs.concat(LQOUT.filter(i=>i.k==='r').map(i=>i.d));
+  all.sort((a,b)=>Date.parse(b.played_at)-Date.parse(a.played_at));
+  for(const r of all){const h=by.get(r.hero)||mk(r.hero);const t=Date.parse(r.played_at),win=r.result==='win';
+    h.runs++;if(win)h.wins++;if(r.result==='dead')h.deaths++;h.kills+=r.kills;h.shots+=r.shots;h.hits+=r.hits;h.time+=r.secs;h.best=Math.max(h.best,r.room);
+    if(win&&(!h.fast||r.secs<h.fast))h.fast=r.secs;h.bestKills=Math.max(h.bestKills,r.kills);h.last=Math.max(h.last,t);
+    for(const k in (r.guns||{}))h.guns[k]=(h.guns[k]||0)+(+r.guns[k]||0);
+    if(h.hist.length<60)h.hist.push({t,r:r.result,room:r.room,k:r.kills,s:r.shots,h:r.hits,d:r.secs,seed:r.seed});}
+  LQ.heroes=[...by.values()];if(HERO)HERO=lqFind(HERO.name)||HERO;if(HERO&&!LQ.heroes.includes(HERO))LQ.heroes.push(HERO);lqSave();}
+function lqRedraw(){if(G.state!=='title'||ov.classList.contains('hidden'))return;
+  if(ov.querySelector('.lqwho')){if(!heroBuf)heroScreen();}
+  else if(ov.querySelector('.lqpro'))profileScreen(G.lqProf);
+  else if(ov.querySelector('.lqp'))legendsScreen();
+  else if(ov.querySelector('.ttln'))titleScreen();}
+function lqSync(redraw){if(LQSYNC)return LQSYNC;LQLAST=Date.now();
+  LQSYNC=(async()=>{try{lqMigrate();await lqFlush();
+      const [hs,rs]=await Promise.all([lqApi('heroes?select=name,col,created_at'),lqApi('runs?select=hero,played_at,result,room,kills,shots,hits,secs,seed,guns&order=played_at.desc&limit=20000')]);
+      lqRebuild(hs,rs);LQNET='online';}
+    catch(e){LQNET='offline';console.warn('legends sync failed',e&&e.message);}
+    finally{LQSYNC=null;}
+    const sig=LQNET+JSON.stringify(LQ.heroes);if(redraw&&sig!==LQSIG)lqRedraw();LQSIG=sig;})();
+  return LQSYNC;}
+function lqNetTag(){return LQNET==='online'?'<span style="color:var(--tl)">● ONLINE BOARD · ALL DEVICES</span>':'<span style="color:#ff8a96">● OFFLINE · RUNS WILL SYNC WHEN BACK ONLINE</span>';}
+addEventListener('online',()=>lqSync(true));
+setInterval(()=>{if(G.state==='title'&&Date.now()-LQLAST>20000)lqSync(true);},5000);
 function toTitle(){if(G.runSeed&&(G.state==='pause'))recStats(false);G.state='title';amb(null);SW.on=false;SW.state='';releaseLock();G.runSeed=0;G.custom=null;buildRoom(1);titleScreen();}
 
 /* ================= input ================= */
