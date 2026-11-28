@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cousin Quest Playtest</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE work: a private balancing console for one game dev
+   IDEA control-room readout: one dominant run funnel, thin strips beside and below
+   PICTURE room-by-room funnel: how many runs reach each room, where they die or quit
+   COLOUR steel panel ground, black ink, white cards, alarm red for deaths; night #16191c
+   TYPE Inter Tight 700 headings + Inter text
+   LAYOUT laptop: finding + figures row, funnel 60% beside death causes; phone: stacked */
+:root{color-scheme:light dark;--bg:light-dark(#d5dbe0,#16191c);--card:light-dark(#ffffff,#1f2327);--ink:light-dark(#0b0d0f,#eef1f3);--mut:light-dark(#56606a,#9aa4ad);--line:light-dark(#c3cad0,#30363c);--bar:light-dark(#9aa6b1,#4b555e);--red:#e8251a;--quit:light-dark(#1d2328,#c9d0d6);--good:light-dark(#0f7b4f,#3fcf8e)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;overflow-x:clip}
+.band{padding-block:24px;padding-left:max(4vw,16px,env(safe-area-inset-left,0px));padding-right:max(4vw,16px,env(safe-area-inset-right,0px));max-width:1320px;margin:0 auto}
+h1,h2{font-family:'Inter Tight',Inter,sans-serif;letter-spacing:-.02em;line-height:1.08;margin:0}
+h1{font-size:clamp(28px,4vw,42px)}
+h2{font-size:19px;margin-bottom:4px}
+.sub{color:var(--mut);margin:6px 0 0;max-width:70ch}
+.top{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:flex-end;justify-content:space-between}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input,button{font:500 14px Inter,sans-serif;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-height:38px}
+button{cursor:pointer;font-weight:600}button:hover{border-color:var(--ink)}
+.note{margin-top:14px;padding:10px 14px;border-left:3px solid var(--red);background:var(--card);font-size:14px}
+.note[hidden]{display:none}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5em,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:18px}
+.kpi{background:var(--card);padding:14px 16px}
+.kpi b{display:block;font:700 clamp(24px,3vw,32px)/1.1 'Inter Tight',sans-serif;white-space:nowrap;font-variant-numeric:tabular-nums}
+.kpi span{color:var(--mut);font-size:13px}
+.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;margin-top:18px}
+.grid.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.card{background:var(--card);border:1px solid var(--line);padding:18px 18px 14px}
+.card .sub{font-size:13px;margin:0 0 14px}
+.fun{display:grid;grid-template-columns:minmax(8em,13em) minmax(0,1fr) max-content;gap:6px 12px;align-items:center}
+.fun .nm{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fun .nm small{display:block;color:var(--mut);font-weight:400;font-size:12px}
+.trk{position:relative;height:26px;background:color-mix(in srgb,var(--bar) 18%,transparent)}
+.trk i{position:absolute;top:0;bottom:0;left:0;background:var(--bar)}
+.trk em{position:absolute;top:0;bottom:0;background:var(--red)}
+.trk u{position:absolute;top:0;bottom:0;background:var(--quit)}
+.fun .v{font-size:13px;color:var(--mut);white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right}
+.fun .v b{color:var(--ink)}
+.leg{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--mut);margin-top:12px}
+.leg span:before{content:'';display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{font-weight:600;color:var(--mut);font-size:12px;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td.n{white-space:normal}
+.mini{display:inline-block;height:8px;background:var(--bar);vertical-align:middle;margin-right:6px}
+.mini.r{background:var(--red)}
+.hot{color:var(--red);font-weight:600}.ok{color:var(--good);font-weight:600}
+.foot{color:var(--mut);font-size:13px}
+.fx{display:grid;grid-template-columns:max-content minmax(0,1fr) max-content;gap:10px 12px;align-items:start;padding:12px 0;border-bottom:1px solid var(--line)}
+.fx input{width:20px;height:20px;min-height:0;margin:2px 0 0;accent-color:var(--red)}
+.fx b{display:block;font-weight:600}.fx p{margin:2px 0 0;color:var(--mut);font-size:14px}
+.fx code{font:600 13px Inter,sans-serif;background:color-mix(in srgb,var(--bar) 22%,transparent);padding:2px 6px;border-radius:4px;white-space:nowrap}
+.tag{font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap;border:1px solid var(--line);color:var(--mut)}
+.tag.p{border-color:var(--red);color:var(--red)}
+.act{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+.act button.go{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.act button:disabled{opacity:.45;cursor:not-allowed}
+.knob{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.hist{font-size:13px;color:var(--mut);margin-top:12px}.hist div{display:flex;justify-content:space-between;gap:8px;padding:4px 0}
+.msg{font-size:14px;margin-top:10px}
+@media(max-width:900px){.grid,.grid.two{grid-template-columns:minmax(0,1fr)}}
+.fun .row{display:contents}
+@media(max-width:600px){.fun{display:block}.fun .row{display:grid;grid-template-columns:minmax(0,1fr) max-content;grid-template-areas:'n v' 't t';gap:4px 8px;margin-bottom:10px}.fun .nm{grid-area:n}.fun .v{grid-area:v}.fun .trk{grid-area:t}table{font-size:13px}th,td{padding:6px 4px}}
+</style>
+</head>
+<body>
+
+
+<div class="band">
+  <div class="top">
+    <div>
+      <h1 id="head">Cousin Quest playtest</h1>
+      <p class="sub" id="lede">Loading…</p>
+    </div>
+    <div class="ctl">
+      <select id="days" aria-label="Time window"><option value="1">Last 24 hours</option><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select>
+      <select id="mode" aria-label="Run type"><option value="normal" selected>Normal runs</option><option value="all">All runs (incl. tests)</option></select>
+      <select id="ver" aria-label="Build"><option value="">All builds</option></select>
+      <select id="dev" aria-label="Device"><option value="">All devices</option><option>desktop</option><option>tablet</option><option>phone</option></select>
+      <button id="reload">Refresh</button>
+    </div>
+  </div>
+  <div class="note" id="note" hidden></div>
+  <form class="note" id="keyf" hidden><span>Enter the dashboard key to load live data: </span><input id="key" type="password" autocomplete="off" placeholder="cq-…" style="width:16em"> <button>Load</button> <button type="button" id="demo">Show sample data</button></form>
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid">
+    <section class="card">
+      <h2 id="fixH">Suggested fixes</h2>
+      <p class="sub">The goal is to keep it hard and fix what isn't fun: spikes, slogs, samey deaths and unused gear. Full clears should stay around 10 to 25%. Rules read the numbers below. Changes marked <span class="tag p">Push</span> can go live now: the game picks them up at the start of the next run on jetercotton.com. Others need a code change, so ask Claude in the project.</p>
+      <div id="fixes"></div>
+      <div class="act"><button class="go" id="push" disabled>Push selected</button><input id="pnote" placeholder="Note (optional)" style="flex:1;min-width:10em"><span class="msg" id="pmsg"></span></div>
+    </section>
+    <section class="card">
+      <h2>Live tuning</h2>
+      <p class="sub">What the game is using now. Every value is capped between 0.5× and 1.5×.</p>
+      <div id="knobs"></div>
+      <div class="act"><button id="reset">Reset to defaults</button><button id="undo">Undo last push</button></div>
+      <div class="hist" id="hist"></div>
+    </section>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2 id="funH">Where runs end</h2>
+      <p class="sub">Bar length is how many runs reached each room. Red is deaths in that room; the end cap is quits (abandoned or tab closed).</p>
+      <div class="fun" id="fun"></div>
+      <div class="leg"><span style="--c:var(--bar)">Reached</span><span style="--c:var(--red)">Died here</span><span style="--c:var(--quit)">Quit here</span></div>
+    </section>
+    <section class="card">
+      <h2>What kills players</h2>
+      <p class="sub">Deaths by cause in each room.</p>
+      <div class="scroll"><table id="cause"></table></div>
+    </section>
+  </div>
+
+  <div class="grid two">
+    <section class="card">
+      <h2 id="boonH">Boons</h2>
+      <p class="sub">Pick rate is picks per time offered. Win and avg room use runs that ended holding it. Longer runs collect more boons, so compare boons with each other, not with All runs.</p>
+      <div class="scroll"><table id="boons"></table></div>
+    </section>
+    <section class="card">
+      <h2 id="gunH">Weapons</h2>
+      <p class="sub">Share of all shots and kills, and how runs that owned the weapon went.</p>
+      <div class="scroll"><table id="guns"></table></div>
+    </section>
+  </div>
+
+  <div class="grid two">
+    <section class="card">
+      <h2 id="perfH">Frame time by room</h2>
+      <p class="sub">5-second samples during play. Over 16.7 ms misses 60 fps; slow is the share of frames over 34 ms.</p>
+      <div class="scroll"><table id="perf"></table></div>
+    </section>
+    <section class="card">
+      <h2>Rooms in detail</h2>
+      <p class="sub">Clear time and damage taken per cleared room, and death rate of runs that entered.</p>
+      <div class="scroll"><table id="rooms"></table></div>
+      <h2 style="margin-top:18px">Frame time by device</h2>
+      <div class="scroll"><table id="devs"></table></div>
+    </section>
+  </div>
+  <p class="foot" id="foot"></p>
+</div>
+
+<script>
+{
+const URL_='https://iuhcdgmjhqdforpbjamy.supabase.co',KEY_='sb_publishable_yh9k5_J0DCF9eQV9Tbb9UQ_1EsBmMuh';
+const BOSS=8,RN=['','The Rift Moor','The Drowned Moor','Stones of Ash','The Hollow Wood','Barrow Fields','The Weeping Cliffs','Gates of the Blood Moon','The Creature'];
+const BN={incendiary:'Incendiary Rounds',frost:'Frost Rounds',chain:'Chain Lightning',volley:'Arcane Volley',vampiric:'Vampiric',glass:'Glass Cannon',rapid:'Rapid Fire',bigiron:'Big Iron',shotgun:'Sawed-Off',blade:'Elf Blade',cannon:'Hand Cannon'};
+const WN={rifle:'Auto Rifle',shotgun:'Sawed-Off',cannon:'Hand Cannon',blade:'Elf Blade',sword:'Emberfall'};
+const $=id=>document.getElementById(id);
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
+const pct=(a,b)=>b?Math.round(100*a/b)+'%':'–';
+const nf=n=>Math.round(n).toLocaleString('en-US');
+let RAW=[],SRC='',ST=null,TUNE={id:0,cfg:{}},HIST=[],LIVE=false;
+const EN={grunt:'goblins',spitter:'wraiths',bomber:'rot slimes',skel:'Risen Dead',boss:'The Creature'};
+const ETY=c=>c==='CLUB GOBLIN'||c==='GOBLIN'?'grunt':c==='WRAITH'||c==='A CURSED BOLT'?'spitter':c==='ROT SLIME'||c==='A SLIME BURST'?'bomber':c==='RISEN DEAD'?'skel':c==='THE CREATURE'?'boss':'';
+const r2=x=>Math.round(x*100)/100;
+function cur(group,k){const g=TUNE.cfg[group];return g&&+g[k]>0?+g[k]:1;}
+function suggest(){const S=[],{rm,W,B,done,perf,pr}=ST;const rl=n=>n===BOSS?'the boss room':'Room '+n;
+  const dr=n=>rm[n]&&rm[n].reach>=20?rm[n].die/rm[n].reach:null;
+  /* challenge check: full clears should stay rare */
+  const wins=done.filter(r=>r.res==='win').length,cr=done.length?wins/done.length:0;
+  if(done.length>=40&&cr>.3)S.push({id:'tooeasy',t:`${Math.round(cr*100)}% of runs are full clears, above the 10 to 25% target`,p:'The game is getting easy. Give enemies in rooms 5 to 8 10% more health.',ch:[5,6,7,8].map(n=>['hp',n,r2(cur('hp',n)*1.1)])});
+  for(let n=1;n<=BOSS;n++){const x=rm[n],d=dr(n);if(d===null)continue;const qr=x.quit/x.reach;
+    const nb=[dr(n-1),dr(n+1)].filter(v=>v!==null),avg=nb.length?nb.reduce((a,b)=>a+b,0)/nb.length:null;
+    /* a spike much deadlier than its neighbours feels unfair: move some of its pressure to the next room instead of removing it */
+    if(n<BOSS&&avg!==null&&d>.2&&d>avg*1.8){const ch=[['count',n,r2(cur('count',n)*.9)]];if(n+1<BOSS)ch.push(['count',n+1,r2(cur('count',n+1)*1.05)]);
+      S.push({id:'spike'+n,t:`${rl(n)} is a difficulty spike: ${Math.round(d*100)}% of runs die there vs ${Math.round(avg*100)}% next to it`,p:'Smooth the curve instead of lowering it: 10% fewer enemies here, 5% more in the next room.',ch});}
+    else if(n===BOSS&&d>.85)S.push({id:'boss',t:`The Creature wins ${Math.round(d*100)}% of fights`,p:'Hard is right for a boss, but this is close to a wall. Trim its health by 5%.',ch:[['hp',n,r2(cur('hp',n)*.95)]]});
+    /* flat stretches: nobody dies, so add pressure */
+    else if(n>=2&&n<BOSS&&d<.05&&x.reach>=40)S.push({id:'easy'+n,t:`${rl(n)} almost never kills anyone (${Math.round(d*100)}%)`,p:'It is a breather with no tension. Add 10% more enemies.',ch:[['count',n,r2(cur('count',n)*1.1)]]});
+    /* slogs: lots of quitting and long clears; keep the threat, shorten the grind */
+    if(qr>.08){const cs=x.clr?x.cs/x.clr:0,long=cs>150;S.push({id:'quit'+n,t:`${Math.round(qr*100)}% of runs are abandoned in ${rl(n)}`,p:long?`Clears take ${Math.round(cs)}s, so it likely drags. Make it fewer but tougher enemies: same threat, less grind.`:'Clears are not long, so it may feel unfair or confusing (exit portal hard to find?). Worth a look in code.',ch:long?[['count',n,r2(cur('count',n)*.85)],['hp',n,r2(cur('hp',n)*1.15)]]:null});}}
+  /* repetition: one enemy type doing most of the killing. Rebalance between types instead of lowering total threat */
+  const tot={};let td=0;for(const x of rm)for(const c in x.causes){const t=ETY(c);if(!t)continue;tot[t]=(tot[t]||0)+x.causes[c];td+=x.causes[c];}
+  for(const t in tot)if(td>=15&&t!=='boss'&&tot[t]/td>.35){const others=['grunt','spitter','bomber','skel'].filter(o=>o!==t);
+    S.push({id:'dmg'+t,t:`${EN[t]} cause ${Math.round(100*tot[t]/td)}% of all deaths`,p:`Deaths feel samey. Shift threat around: ${EN[t]} deal 10% less damage, the other enemies 5% more.`,ch:[['dmg',t,r2(cur('dmg',t)*.9)],...others.map(o=>['dmg',o,r2(cur('dmg',o)*1.05)])]});}
+  /* variety: weapons nobody uses */
+  for(const w of ['shotgun','cannon']){const x=W[w];if(!x||x.runs<15)continue;const kpr=x.k/x.runs,rk=W.rifle?W.rifle.k/W.rifle.runs:0;if(rk&&kpr<rk*.12)S.push({id:'w'+w,t:`${WN[w]} gets few kills when owned (${kpr.toFixed(1)} per run)`,p:'Players stick to the rifle. Raise its damage 10% so switching is worth it.',ch:[['wdmg',w,r2(cur('wdmg',w)*1.1)]]});}
+  /* frame rate */
+  const lr=[];for(const d of ['tablet','phone']){const x=pr(perf.filter(e=>e.dev===d).map(e=>e.d));if(x&&x.n>=30&&x.a>20)lr.push(d);}
+  const L=TUNE.cfg.lowres||[];if(lr.some(d=>!L.includes(d)))S.push({id:'lowres',t:`${lr.join(' and ')} players average under 50 fps`,p:`Start ${lr.join(' and ')} players on CHUNKY resolution (they can still change it in Settings).`,ch:[['lowres',null,[...new Set([...L,...lr])]]]});
+  for(let n=1;n<=BOSS;n++){const x=pr(rm[n].pf);if(x&&x.n>=30&&x.a>22)S.push({id:'perf'+n,t:`${rl(n)} runs at ${x.a.toFixed(1)} ms a frame (${Math.round(1000/x.a)} fps)`,p:`About ${x.en.toFixed(1)} enemies on screen. Fewer props or particles there is the real fix (code change); this pushes fewer but tougher enemies to keep the threat.`,ch:[['count',n,r2(cur('count',n)*.9)],['hp',n,r2(cur('hp',n)*1.1)]]});}
+  for(const k in B){const b=B[k];if(!BN[k]||b.off<30)continue;if(b.pick/b.off>.5)S.push({id:'b'+k,t:`${BN[k]} is picked ${Math.round(100*b.pick/b.off)}% of the time it is offered`,p:'Builds converge on it. Make the boons offered beside it more tempting rather than only nerfing it.',ch:null});}
+  for(const f of S){f.t=f.t[0].toUpperCase()+f.t.slice(1);if(f.ch&&TUNE.id&&ST.nowRuns<20&&f.ch.some(([g,k])=>g==='lowres'?(TUNE.cfg.lowres||[]).length:cur(g,k)!==1)){f.wait=`Already tuned. Waiting for 20 runs on tuning #${TUNE.id} before suggesting more (${ST.nowRuns} so far).`;f.ch=null;}}
+  return S;}
+function chText(c){const [g,k,v]=c;if(g==='lowres')return'CHUNKY default on '+v.join(', ');const lab={hp:'enemy HP',count:'enemy count',dmg:'damage from',wdmg:'damage'}[g],who=g==='dmg'?EN[k]:g==='wdmg'?WN[k]:(+k===BOSS?'boss room':'room '+k);return`${g==='dmg'||g==='wdmg'?lab+' '+who:who+' '+lab} ${cur(g,k)}× → ${v}×`;}
+function renderFix(){const S=suggest();window._S=S;
+  $('fixH').textContent=S.length?`${S.length} suggested fix${S.length>1?'es':''}`:'No fixes suggested';
+  $('fixes').innerHTML=S.length?S.map((f,i)=>`<label class="fx"><input type="checkbox" data-i="${i}" ${f.ch?'':'disabled'}><div><b>${esc(f.t)}</b><p>${esc(f.p)}</p>${f.ch?'<p>'+f.ch.map(c=>'<code>'+esc(chText(c))+'</code>').join(' ')+'</p>':''}${f.wait?'<p>'+esc(f.wait)+'</p>':''}</div><span class="tag ${f.ch?'p':''}">${f.ch?'Push':f.wait?'Waiting':'Code change'}</span></label>`).join(''):'<p class="sub">Nothing stands out yet. Rules need about 20 runs into a room before they speak up.</p>';
+  $('fixes').querySelectorAll('input').forEach(el=>el.addEventListener('change',upd));upd();renderTune();}
+function upd(){const n=$('fixes').querySelectorAll('input:checked').length;$('push').disabled=!n;$('push').textContent=n?`Push ${n} selected`:'Push selected';}
+function renderTune(){const c=TUNE.cfg,rows=[];for(const g of ['hp','count','dmg','wdmg'])for(const k in c[g]||{})rows.push(`<div class="knob"><span>${esc(chText([g,k,c[g][k]]).split(' '+cur(g,k)+'×')[0])}</span><b>${esc(c[g][k])}×</b></div>`);
+  if((c.lowres||[]).length)rows.push(`<div class="knob"><span>CHUNKY by default</span><b>${esc(c.lowres.join(', '))}</b></div>`);
+  $('knobs').innerHTML=rows.join('')||'<p class="sub">All defaults. Nothing pushed yet.</p>';
+  $('hist').innerHTML=HIST.slice(0,6).map(h=>`<div><span>#${h.id} · ${esc(new Date(h.at).toLocaleString())}${h.active?' · live':''}</span><span>${esc(h.note||'')}</span></div>`).join('');}
+function merge(base,chs){const c=JSON.parse(JSON.stringify(base||{}));for(const [g,k,v] of chs){if(g==='lowres'){c.lowres=v;continue;}c[g]=c[g]||{};c[g][k]=Math.max(.5,Math.min(1.5,v));if(c[g][k]===1)delete c[g][k];}return c;}
+async function loadTune(){if(!LIVE){HIST=[];return;}try{const r=await fetch(URL_+'/rest/v1/cq_tuning?select=id,at,cfg,note,active&order=id.desc&limit=20',{headers:{apikey:KEY_}});if(!r.ok)throw new Error(r.status);HIST=await r.json();const a=HIST.find(h=>h.active);TUNE=a?{id:a.id,cfg:a.cfg||{}}:{id:0,cfg:{}};}catch(e){$('pmsg').textContent='Could not read live tuning ('+e.message+'). Has the SQL script run?';}}
+async function pushCfg(cfg,note){if(!LIVE){$('pmsg').textContent='Sample data: pushing is off. Enter the dashboard key first.';return;}
+  $('pmsg').textContent='Pushing…';try{const r=await fetch(URL_+'/rest/v1/rpc/cq_push',{method:'POST',headers:{apikey:KEY_,'Content-Type':'application/json'},body:JSON.stringify({tok:store.get('cq.dashkey'),cfg,note:note||''})});
+    if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,120));const id=await r.json();await loadTune();render();$('pmsg').textContent=`Live as tuning #${id}. New runs pick it up.`;}catch(e){$('pmsg').textContent='Push failed: '+e.message;}}
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+async function fetchLive(tok){const out=[];let after=0;
+  for(let i=0;i<200;i++){const r=await fetch(URL_+'/rest/v1/rpc/cq_read',{method:'POST',headers:{apikey:KEY_,'Content-Type':'application/json'},body:JSON.stringify({tok,after_id:after,since:new Date(Date.now()-90*864e5).toISOString()})});
+    if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,140));const rows=await r.json();out.push(...rows);if(rows.length<1000)break;after=rows[rows.length-1].id;}
+  return out;}
+
+function demo(){let s=20261127;const R=()=>(s=s*16807%2147483647)/2147483647;const pick=a=>a[Math.floor(R()*a.length)];const ev=[];let id=0;const now=Date.now();
+  const die=[0,.10,.14,.17,.2,.24,.22,.3,.55],quit=[0,.06,.05,.04,.06,.05,.04,.04,.03],frame=[0,9,10,11,12,19,13,15,22];
+  const causes=[[], ['GOBLIN','GOBLIN','WRAITH'],['GOBLIN','WRAITH','RISEN DEAD'],['WRAITH','RISEN DEAD','AN EXPLOSION'],['RISEN DEAD','ROT SLIME','GOBLIN'],['ROT SLIME','A SLIME BURST','WRAITH','CLUB GOBLIN'],['CLUB GOBLIN','WRAITH','RISEN DEAD'],['CLUB GOBLIN','RISEN DEAD','AN EXPLOSION'],['THE CREATURE','THE CREATURE','A CURSED BOLT']];
+  const boons=Object.keys(BN);
+  for(let p=0;p<38;p++){const pid='demo'+p.toString(36).padStart(8,'0'),dev=R()<.7?'desktop':R()<.6?'tablet':'phone',nr=1+Math.floor(R()*14);
+    for(let k=0;k<nr;k++){const rid='r'+p+'_'+k,t0=now-R()*28*864e5;let t=t0,lv={},wps=['rifle','blade'],guns={rifle:0},gk={},room=1,res='win';const E=(ev_,rm,d)=>ev.push({id:++id,at:new Date(t).toISOString(),pid,sid:'s'+p,rid,ev:ev_,room:rm,v:R()<.5?'v86':'v87',dev,d});
+      E('run_start',1,{mode:R()<.9?'normal':'test'});
+      for(room=1;room<=BOSS;room++){const off=[pick(boons),pick(boons),pick(boons)],b=R()<.25&&off.includes('glass')?'glass':off[Math.floor(R()*3)];E('boon',room,{id:b,opts:off});
+        if(b==='shotgun'||b==='cannon'||b==='blade'){if(!wps.includes(b))wps.push(b);}else lv[b]=(lv[b]||0)+1;
+        E('room_start',room,{});const n=3+Math.floor(R()*6);for(let j=0;j<n;j++){t+=5000;const heavy=dev!=='desktop'?1.6:1,a=frame[room]*heavy*(.8+R()*.5);E('perf',room,{avg:+a.toFixed(1),worst:Math.round(a*(2+R()*4)),slow:+(Math.max(0,a-14)/60).toFixed(3),en:+(3+room*1.3*R()).toFixed(1)});}
+        let pd=die[room];if(lv.glass)pd*=1.5;if(lv.vampiric)pd*=.8;if(lv.chain)pd*=.85;if(wps.includes('cannon'))pd*=.85;
+        for(const w of wps){const sh=w==='rifle'?60+R()*80:w==='blade'?R()*15:R()*30;guns[w]=(guns[w]||0)+Math.round(sh);gk[w]=(gk[w]||0)+Math.round(sh/(w==='rifle'?9:4));}
+        if(R()<pd){const c=pick(causes[room]);E('death',room,{cause:c,weapon:pick(wps)});res='dead';break;}
+        if(R()<quit[room]){res=R()<.5?'quit':'close';break;}
+        t+=60000+R()*90000;E('room_clear',room,{secs:Math.round(50+room*12+R()*60),dmg:Math.round(20+room*9*R())});}
+      if(room>BOSS)room=BOSS;E('run_end',room,{res,boons:lv,weapons:wps,guns,gk,secs:Math.round((t-t0)/1000)});}}
+  return ev;}
+
+function build(){const days=+$('days').value,mode=$('mode').value,ver=$('ver').value,dev=$('dev').value,since=Date.now()-days*864e5;
+  const ev=RAW.filter(e=>Date.parse(e.at)>=since&&(!ver||e.v===ver)&&(!dev||e.dev===dev));
+  const runs=new Map();const R=id=>{let r=runs.get(id);if(!r){r={id,tune:0,mode:'',max:0,res:'',end:0,boons:{},weapons:[],guns:{},gk:{},secs:0,pid:''};runs.set(id,r);}return r;};
+  for(const e of ev){if(!e.rid)continue;const r=R(e.rid);r.pid=e.pid;const d=e.d||{};
+    if(e.ev==='run_start'){r.mode=d.mode||'';r.tune=d.tune|0;}if(e.ev==='room_start'&&e.room>r.max)r.max=e.room;
+    if(e.ev==='run_end'){r.res=d.res;r.end=e.room;r.boons=d.boons||{};r.weapons=d.weapons||[];r.guns=d.guns||{};r.gk=d.gk||{};r.secs=d.secs||0;if(e.room>r.max)r.max=e.room;}}
+  const ok=r=>mode==='all'||r.mode==='normal'||r.mode==='';const keep=new Set([...runs.values()].filter(r=>ok(r)&&r.max>0).map(r=>r.id));
+  const E=ev.filter(e=>!e.rid||keep.has(e.rid)),RS=[...runs.values()].filter(r=>keep.has(r.id)),done=RS.filter(r=>r.res);
+  return{E,RS,done,players:new Set(E.map(e=>e.pid)).size};}
+
+function render(){const {E,RS,done,players}=build();const wins=done.filter(r=>r.res==='win'),quits=done.filter(r=>r.res==='quit'||r.res==='close');
+  const secs=done.map(r=>r.secs).sort((a,b)=>a-b),med=secs.length?secs[secs.length>>1]:0;
+  const perf=E.filter(e=>e.ev==='perf');const pavg=perf.length?perf.reduce((a,e)=>a+e.d.avg,0)/perf.length:0;
+  /* per room */
+  const rm=[];for(let i=0;i<=BOSS;i++)rm.push({reach:0,die:0,quit:0,clr:0,cs:0,dmg:0,causes:{},pf:[],en:0});
+  for(const r of RS){for(let i=1;i<=Math.min(r.max,BOSS);i++)rm[i].reach++;if(r.res==='quit'||r.res==='close')rm[Math.min(r.end||r.max,BOSS)].quit++;}
+  for(const e of E){const x=rm[Math.min(e.room|0,BOSS)];if(!x)continue;
+    if(e.ev==='death'){x.die++;const c=e.d.cause||'?';x.causes[c]=(x.causes[c]||0)+1;}
+    if(e.ev==='room_clear'){x.clr++;x.cs+=e.d.secs||0;x.dmg+=e.d.dmg||0;}
+    if(e.ev==='perf')x.pf.push(e.d);}
+  const deaths=rm.reduce((a,x)=>a+x.die,0),worst=rm.slice(1).reduce((b,x,i)=>x.die>rm[b].die?i+1:b,1);
+  $('lede').textContent=RS.length?`${nf(RS.length)} runs from ${nf(players)} players. Most deaths happen in Room ${worst}, ${RN[worst]} (${pct(rm[worst].die,deaths)} of all deaths); ${pct(rm[worst].die,rm[worst].reach)} of runs that enter it end there.`:'No runs in this window yet.';
+  $('kpis').innerHTML=[[nf(players),'Players'],[nf(RS.length),'Runs'],[pct(wins.length,done.length),'Full clears'],[pct(quits.length,done.length),'Quit rate'],[med?Math.floor(med/60)+'m '+String(med%60).padStart(2,'0')+'s':'–','Median run'],[pavg?Math.round(1000/pavg)+' fps':'–','Average frame rate']].map(k=>`<div class="kpi"><b>${esc(k[0])}</b><span>${k[1]}</span></div>`).join('');
+  const top=rm[1].reach||1;
+  $('fun').innerHTML=rm.slice(1).map((x,i)=>{const n=i+1,w=100*x.reach/top,dw=100*x.die/top,qw=100*x.quit/top;
+    return`<div class="row"><div class="nm">${n===BOSS?'Boss':'Room '+n}<small>${esc(RN[n])}</small></div><div class="trk" title="${x.reach} reached, ${x.die} died, ${x.quit} quit"><i style="width:${w}%"></i><em style="left:${w-dw-qw}%;width:${dw}%"></em><u style="left:${w-qw}%;width:${qw}%"></u></div><div class="v"><b>${nf(x.reach)}</b> · <span class="${x.die/(x.reach||1)>.25?'hot':''}">${pct(x.die,x.reach)} die</span> · ${pct(x.quit,x.reach)} quit</div></div>`;}).join('');
+  $('funH').textContent=rm[BOSS].reach?`${pct(rm[BOSS].reach,top)} of runs reach the boss`:'Where runs end';
+  /* causes */
+  const allC=[...new Set(rm.flatMap(x=>Object.keys(x.causes)))].sort((a,b)=>rm.reduce((s,x)=>s+(x.causes[b]||0),0)-rm.reduce((s,x)=>s+(x.causes[a]||0),0)).slice(0,6);
+  $('cause').innerHTML=`<tr><th>Room</th>${allC.map(c=>`<th>${esc(c.replace(/^(A|AN|THE) /,'').toLowerCase())}</th>`).join('')}<th>Total</th></tr>`+rm.slice(1).map((x,i)=>{const mx=Math.max(0,...Object.values(x.causes));return`<tr><td>${i+1===BOSS?'Boss':i+1}</td>${allC.map(c=>{const v=x.causes[c]||0;return`<td class="${v&&v===mx?'hot':''}">${v||'·'}</td>`}).join('')}<td><b>${x.die}</b></td></tr>`;}).join('');
+  /* boons */
+  const B={};for(const e of E)if(e.ev==='boon'){const d=e.d;for(const o of d.opts||[]){(B[o]=B[o]||{off:0,pick:0,runs:0,win:0,reach:0}).off++;}(B[d.id]=B[d.id]||{off:0,pick:0,runs:0,win:0,reach:0}).pick++;}
+  for(const r of done){const own=new Set([...Object.keys(r.boons),...r.weapons]);for(const k of own){if(!B[k])continue;B[k].runs++;B[k].reach+=r.max;if(r.res==='win')B[k].win++;}}
+  const baseW=done.length?wins.length/done.length:0,baseR=done.length?done.reduce((a,r)=>a+r.max,0)/done.length:0;
+  const bk=Object.keys(B).filter(k=>BN[k]).sort((a,b)=>B[b].pick/(B[b].off||1)-B[a].pick/(B[a].off||1));
+  $('boonH').textContent=bk.length?`Players pick ${BN[bk[0]]} most often`:'Boons';
+  $('boons').innerHTML=`<tr><th>Boon</th><th>Pick rate</th><th>Picks</th><th>Win %</th><th>Avg room</th></tr>`+bk.map(k=>{const b=B[k],pr=b.off?b.pick/b.off:0,wr=b.runs?b.win/b.runs:0,ar=b.runs?b.reach/b.runs:0;
+    return`<tr><td>${esc(BN[k])}</td><td><span class="mini" style="width:${Math.round(pr*60)}px"></span>${pct(b.pick,b.off)}</td><td>${b.pick}</td><td class="${b.runs>4?(wr>baseW*1.2?'ok':wr<baseW*.8?'hot':''):''}">${pct(b.win,b.runs)}</td><td class="${b.runs>4?(ar>baseR+.4?'ok':ar<baseR-.4?'hot':''):''}">${ar?ar.toFixed(1):'–'}</td></tr>`;}).join('')+`<tr><td class="foot">All runs</td><td></td><td></td><td>${Math.round(baseW*100)}%</td><td>${baseR.toFixed(1)}</td></tr>`;
+  /* weapons */
+  const W={};let ts=0,tk=0;for(const r of done){for(const w in r.guns){(W[w]=W[w]||{s:0,k:0,runs:0,win:0,reach:0}).s+=r.guns[w];ts+=r.guns[w];}for(const w in r.gk){(W[w]=W[w]||{s:0,k:0,runs:0,win:0,reach:0}).k+=r.gk[w];tk+=r.gk[w];}
+    for(const w of r.weapons){(W[w]=W[w]||{s:0,k:0,runs:0,win:0,reach:0}).runs++;W[w].reach+=r.max;if(r.res==='win')W[w].win++;}}
+  const wk=Object.keys(W).sort((a,b)=>W[b].k-W[a].k);
+  $('gunH').textContent=wk.length?`${WN[wk[0]]||wk[0]} gets ${pct(W[wk[0]].k,tk)} of kills`:'Weapons';
+  $('guns').innerHTML=`<tr><th>Weapon</th><th>Shots</th><th>Kills</th><th>Runs</th><th>Win %</th><th>Avg room</th></tr>`+wk.map(w=>{const x=W[w];return`<tr><td>${esc(WN[w]||w)}</td><td>${pct(x.s,ts)}</td><td><span class="mini" style="width:${Math.round(60*x.k/(tk||1))}px"></span>${pct(x.k,tk)}</td><td>${x.runs}</td><td>${pct(x.win,x.runs)}</td><td>${x.runs?(x.reach/x.runs).toFixed(1):'–'}</td></tr>`;}).join('');
+  /* perf */
+  const pr=p=>{if(!p.length)return null;const a=p.reduce((s,d)=>s+d.avg,0)/p.length,ws=p.map(d=>d.worst).sort((x,y)=>x-y),sl=p.reduce((s,d)=>s+(d.slow||0),0)/p.length,en=p.reduce((s,d)=>s+(d.en||0),0)/p.length;return{a,w95:ws[Math.floor(ws.length*.95)]||ws[ws.length-1],sl,en,n:p.length};};
+  const prow=(lab,x)=>x?`<tr><td>${lab}</td><td class="${x.a>16.7?'hot':''}"><span class="mini${x.a>16.7?' r':''}" style="width:${Math.min(70,Math.round(x.a*2))}px"></span>${x.a.toFixed(1)} ms</td><td>${Math.round(x.w95)} ms</td><td>${(x.sl*100).toFixed(1)}%</td><td>${x.en.toFixed(1)}</td><td>${x.n}</td></tr>`:'';
+  const pRooms=rm.slice(1).map((x,i)=>({i:i+1,x:pr(x.pf)})).filter(o=>o.x),slow=pRooms.slice().sort((a,b)=>b.x.a-a.x.a)[0];
+  $('perfH').textContent=slow?`${slow.i===BOSS?'The boss room':'Room '+slow.i} is the slowest at ${slow.x.a.toFixed(1)} ms a frame`:'Frame time by room';
+  const ph=`<tr><th>Room</th><th>Avg frame</th><th>Worst (p95)</th><th>Slow</th><th>Enemies</th><th>Samples</th></tr>`;
+  $('perf').innerHTML=ph+pRooms.map(o=>prow(o.i===BOSS?'Boss':'Room '+o.i,o.x)).join('');
+  $('devs').innerHTML=ph.replace('Room','Device')+['desktop','tablet','phone'].map(d=>prow(d[0].toUpperCase()+d.slice(1),pr(perf.filter(e=>e.dev===d).map(e=>e.d)))).join('');
+  $('rooms').innerHTML=`<tr><th>Room</th><th>Entered</th><th>Cleared</th><th>Avg clear</th><th>Dmg taken</th><th>Death rate</th></tr>`+rm.slice(1).map((x,i)=>`<tr><td>${i+1===BOSS?'Boss':i+1}</td><td>${x.reach}</td><td>${x.clr}</td><td>${x.clr?Math.round(x.cs/x.clr)+'s':'–'}</td><td>${x.clr?Math.round(x.dmg/x.clr):'–'}</td><td class="${x.die/(x.reach||1)>.25?'hot':''}">${pct(x.die,x.reach)}</td></tr>`).join('');
+  ST={rm,B,W,tk,done,perf,pr,baseW,baseR,nowRuns:RS.filter(r=>r.tune===TUNE.id).length};renderFix();
+  $('foot').textContent=`${SRC}. ${nf(E.length)} events in view. Unfinished runs (still playing or lost signal) count toward rooms reached but not toward rates.`;}
+
+function setVers(){const vs=[...new Set(RAW.map(e=>e.v).filter(Boolean))].sort().reverse(),cur=$('ver').value;$('ver').innerHTML='<option value="">All builds</option>'+vs.map(v=>`<option${v===cur?' selected':''}>${esc(v)}</option>`).join('');}
+function useDemo(msg){LIVE=false;TUNE={id:0,cfg:{}};HIST=[];RAW=demo();SRC='Sample data (made up, for layout only)';$('note').hidden=false;$('note').textContent=msg||'Showing made-up sample data.';setVers();render();}
+async function load(){const tok=store.get('cq.dashkey');if(!tok){$('keyf').hidden=false;useDemo('Showing made-up sample data until you enter the dashboard key.');$('note').hidden=true;return;}
+  $('keyf').hidden=true;$('lede').textContent='Loading live data…';
+  try{RAW=await fetchLive(tok);LIVE=true;await loadTune();SRC='Live data from Supabase, loaded '+new Date().toLocaleTimeString();$('note').hidden=true;setVers();render();}
+  catch(e){$('keyf').hidden=false;useDemo('Could not load live data ('+e.message+'). Showing made-up sample data instead.');}}
+$('keyf').addEventListener('submit',ev=>{ev.preventDefault();const v=$('key').value.trim();if(v){store.set('cq.dashkey',v);load();}});
+$('demo').addEventListener('click',()=>useDemo());
+$('push').addEventListener('click',()=>{const S=window._S||[],sel=[...$('fixes').querySelectorAll('input:checked')].map(el=>S[+el.dataset.i]);const chs=sel.flatMap(f=>f.ch||[]);if(!chs.length)return;
+  const note=$('pnote').value.trim()||sel.map(f=>f.id).join(', ');pushCfg(merge(TUNE.cfg,chs),note);});
+$('reset').addEventListener('click',()=>{if($('reset').dataset.arm){delete $('reset').dataset.arm;$('reset').textContent='Reset to defaults';pushCfg({},'reset to defaults');}else{$('reset').dataset.arm=1;$('reset').textContent='Click again to reset';}});
+$('undo').addEventListener('click',()=>{const prev=HIST.filter(h=>!h.active)[0];if(!LIVE){$('pmsg').textContent='Sample data: pushing is off.';return;}pushCfg(prev?prev.cfg:{},'undo to #'+(prev?prev.id:'defaults'));});
+$('reload').addEventListener('click',load);
+['days','mode','ver','dev'].forEach(id=>$(id).addEventListener('change',render));
+window.__cqdemo=demo;
+load();
+}
+</script>
+
+</body>
+</html>
