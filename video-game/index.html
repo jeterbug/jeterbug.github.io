@@ -588,7 +588,7 @@ button.ghost{background:transparent;color:#c8b49a;box-shadow:none;border:2px sol
 <div id="tabnote">Connect a <b>controller</b> or a <b>mouse + keyboard</b> to play</div><div id="mobblk"><svg class="rune" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3"><circle cx="50" cy="50" r="44"/><circle cx="50" cy="50" r="30" stroke-width="2" stroke-dasharray="4 6"/><path d="M50 12 L50 88 M50 30 L34 50 L50 70 L66 50 Z"/></svg><h1>COUSIN<span>//</span>QUEST</h1><p>The rifts only open on a <b>desktop or laptop</b>.</p><p class="m">Open this link on a computer with a keyboard and mouse (or a controller) to play.</p></div>
 <script>
 // ---- game version (bump GAME_BUILD each build) ----
-const GAME_BUILD=99;
+const GAME_BUILD=100;
 function gameVer(n=GAME_BUILD){return n<100?'v0.'+n:'v0.'+Math.floor(n/100)+'.'+(n%100);}
 </script>
 <script>(function(){try{const mm=q=>window.matchMedia&&matchMedia(q).matches;const touch=mm('(pointer:coarse)')&&!mm('(any-pointer:fine)'),ua=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -1862,7 +1862,7 @@ function updateEnemies(dt){const s=S();aiDirector(dt);
 }
 
 /* ================= combat ================= */
-function damage(e,amt,crit){if(e.dead)return;if(e.t==='boss'&&bossGuard(e))return;if(e.t==='orc'&&amt>=140)e.hitReq=1;if(e.t==='boss'&&amt>=45)e.hitReq=1;e.hp-=amt;if(e.t==='boss')bossClamp(e);e._crit=!!crit;e.flash=.06;dmgNum(e,amt,crit);if(e.hp<=0)kill(e);else if(SMAP['ehurt_'+e.t]&&G.time-(e.hurtVT||-9)>.9&&Math.random()<.55){e.hurtVT=G.time;sfx('ehurt_'+e.t,e.x,e.z);}}
+function damage(e,amt,crit){if(e.dead)return;if(e.t==='boss'&&bossGuard(e))return;if(e.t==='orc')orcHurt(e,amt);if(e.t==='boss'&&amt>=45)e.hitReq=1;e.hp-=amt;if(e.t==='boss')bossClamp(e);e._crit=!!crit;e.flash=.06;dmgNum(e,amt,crit);if(e.hp<=0)kill(e);else if(SMAP['ehurt_'+e.t]&&G.time-(e.hurtVT||-9)>.9&&Math.random()<.55){e.hurtVT=G.time;sfx('ehurt_'+e.t,e.x,e.z);}}
 const DN=[];
 function dmgNum(e,amt,crit){if(!(amt>0))return;const n=e._dn;
   if(n&&!n.crit&&!crit&&G.time-n.t0<.3&&DN.includes(n)){n.v+=amt;n.t0=G.time;n.x=e.x;n.z=e.z;n.y=(e.spawnT>0?e.gy:e.yOff)+e.h+.08;return;}
@@ -1901,8 +1901,8 @@ function shatter(e){e.frozen=0;e.chill=0;fxAdd(3,e.x,e.yOff+e.h*.5,e.z,e.h*1.7,e
 function applyStatus(e,fire,ice){const s=S();
   if(fire){if((e.chill>0||e.frozen>0)&&has('frost'))thermal(e);if(e.dead)return;if(!(e.burn>0))statusPop(e,'BURNING','#ff8a3a');e.burn=s.burnT;
     if(G.time-(e.fxHit??-9)>.3){e.fxHit=G.time;fxAdd(0,e.x+rnd(-.2,.2),e.yOff+e.h*.55,e.z+rnd(-.2,.2),.6,.8,.25);}}
-  if(ice){if(e.burn>0&&has('incendiary'))thermal(e);if(e.dead)return;e.chill+=e.t==='orc'?.4:1;e.chillT=3;
-    if(e.chill>=s.freezeAt){e.chill=0;e.frozen=s.freezeT*(e.t==='orc'?.4:1);e.wind=0;statusPop(e,'FROZEN','#9fe8ff');fxAdd(3,e.x,e.yOff+e.h*.5,e.z,e.h*1.3,e.h*1.3,.3,[.7,.95,1]);burst(e.x,e.yOff+e.h*.5,e.z,'#9fe8ff',10,3,.5,.14,-6);}}
+  if(ice){if(e.burn>0&&has('incendiary'))thermal(e);if(e.dead)return;e.chill+=e.t==='orc'?.4:1;if(e.t==='orc')e.chill=Math.min(e.chill,1.5);e.chillT=3;
+    if(e.chill>=s.freezeAt&&e.t!=='orc'){e.chill=0;e.frozen=s.freezeT*(e.t==='orc'?.4:1);e.wind=0;statusPop(e,'FROZEN','#9fe8ff');fxAdd(3,e.x,e.yOff+e.h*.5,e.z,e.h*1.3,e.h*1.3,.3,[.7,.95,1]);burst(e.x,e.yOff+e.h*.5,e.z,'#9fe8ff',10,3,.5,.14,-6);}}
 }
 function thermal(e){if(e.tsCd>0)return;e.tsCd=.5;statusPop(e,'THERMAL','#ffffff');fxAdd(3,e.x,e.yOff+e.h*.6,e.z,e.h*1.3,e.h*1.3,.4,[.85,.95,.92]);steam(e);burst(e.x,e.yOff+e.h*.6,e.z,'#ffffff',8,5,.4,.12,-6);damage(e,30*S().mult);}
 const HEADF={orc:.86,grunt:.8,spitter:.8,bomber:.66,boss:.8,skel:.84};
@@ -3171,7 +3171,12 @@ function explodeFx(e){if(typeof ffxPuff==='function')ffxPuff(e.x,e.gy+.6,e.z,'re
 const ORCQ={tint:[.92,1,.9],alb:.72,rim:.3,self:.12,spec:.3,pix:1};
 const ORC={ready:0,need:1,Gm:new Float32Array(240),tmp:new Float32Array(140),d:null};
 // frames @30fps. punch: slow windup (wr) to the hit frame, then full speed. pound = Mutant Jump Attack: leap, slam at hit, shockwave out to R
-const ORCATK={punch:{hit:9,end:34,wr:.42,rate:.95,dmg:42,r:5.4,arc:.3},pound:{hit:53,end:100,rate:1.05,dmg:52,R:9.5,wave:30,core:3.6}};
+const ORCATK={punch:{clip:'punch',hits:[9],end:34,wr:.42,rate:.95,dmg:42,r:5.4,arc:.3},
+  swipe:{clip:'swipe',hits:[25,57],end:96,rate:1.15,dmg:30,r:5.8,arc:.1,lunge:.3,kb:7},
+  spin:{clip:'spin',hits:[36],end:60,rate:1.05,wr:.8,dmg:38,r:6.4,arc:-1,lunge:.2,kb:12,shake:.35},
+  smash:{clip:'smash',hits:[37],end:80,rate:1.1,wr:.75,dmg:48,R:6.5,wave:22,core:3.2,low:1,rest:1.2},
+  combo:{clip:'combo',hits:[28,36,56],end:92,rate:1.15,dmg:20,r:5,arc:.3,lunge:.15,kb:5},
+  pound:{clip:'jump',hits:[53],end:100,rate:1.05,dmg:52,R:9.5,wave:30,core:3.6}};
 const orcOK=()=>typeof ORCA!=='undefined'&&typeof ORC_D!=='undefined';
 const orcDur=(c,rate)=>ORCA.clips[c].n/30/(rate||1);
 function orcInit(){if(ORC.d)return;const q=new Int16Array(b64u8(ORCA.d).buffer),ts=ORCA.ts/32767,d=new Float32Array(q.length);
@@ -3192,28 +3197,51 @@ function orcSample(c,t,out){const C=ORCA.clips[c],d=ORC.d;let f=t*30;
   for(let b=0;b<20;b++){const k=b*7,p=o0+k,q=o1+k,s=d[p]*d[q]+d[p+1]*d[q+1]+d[p+2]*d[q+2]+d[p+3]*d[q+3]<0?-1:1;
     for(let j=0;j<4;j++)out[k+j]=d[p+j]*(1-a)+d[q+j]*s*a;for(let j=4;j<7;j++)out[k+j]=d[p+j]*(1-a)+d[q+j]*a;}return out;}
 function orcTrav(c,f){const T=ORCA.clips[c].trav;if(!T)return 0;const x=clamp(f/3,0,T.length-1),i=Math.floor(x),j=Math.min(T.length-1,i+1);return T[i]+(T[j]-T[i])*(x-i);}
-function orcPick(e){
-  if(e.dead)return ['die',(G.time-e.dt0)*1.25,.15];
-  if(e.spawnT>0)return ['idle',null,.2];
-  if(e.ost==='roar')return ['roar',.6+e.ot*1.3,.2];
-  if(e.ost==='hit')return ['hit',e.ot,.12];
-  if(e.ost==='punch')return ['punch',e.of/30,.12];
-  if(e.ost==='pound')return ['jump',e.of/30,.15];
-  if(e.frozen>0)return [e.an?e.an.c:'idle',e.an?e.an.t:0,.2];
-  if(e.gm>.4)return [e._run?'run':'walk',null,.3];
-  return ['idle',null,.35];}
-function orcPose(e){orcInit();const now=G.time,dt=Math.min(.1,Math.max(0,now-(e._gt??now)));e._gt=now;
-  if(!e.an)e.an={c:'idle',t:Math.random()*3,snap:new Float32Array(140),cur:new Float32Array(140),bl:1,fade:.2};
-  const an=e.an,mvd=Math.abs(e.walk-(e._gw??e.walk));e._gw=e.walk;const spd=dt>0?mvd/dt/1.4:0;e.gm=lerp(e.gm||0,mvd>1e-4?1:0,Math.min(1,dt*8));
-  const [c,t,fade]=orcPick(e);
-  if(c!==an.c){an.snap.set(an.cur);an.bl=0;an.fade=fade;an.c=c;if(t===null)an.t=0;}
-  if(t===null&&!(e.frozen>0&&!e.dead)){const C=ORCA.clips[c],nat=C.stride?C.stride/(C.n/30):0;an.t+=dt*(nat?clamp(spd/nat,.5,2):1);}
-  else if(t!==null)an.t=t;
-  const P_=orcSample(c,an.t,ORC.tmp);
+// ---- pose v2 (Nov 28): speed-blended locomotion with synced phase, eased crossfades between actions, procedural flinch + head tracking
+const ORCLOC=()=>ORC.loc||(ORC.loc={wn:ORCA.clips.walk.stride/(ORCA.clips.walk.n/30),rn:ORCA.clips.run.stride/(ORCA.clips.run.n/30),wd:ORCA.clips.walk.n/30,rd:ORCA.clips.run.n/30});
+function orcAct(e){ // explicit (clip,time) for an action, or null for locomotion
+  if(e.dead)return [e.dclip||'die',(G.time-e.dt0)*1.25,.25];
+  if(e.spawnT>0)return ['idle',e.seed,.2];
+  if(e.ost==='roar')return ['roar',.6+e.ot*1.3,.3];
+  if(e.ost==='scream')return ['scream',e.ot*1.2,.3];
+  if(e.ost==='flex')return ['flex',.3+e.ot*1.25,.35];
+  if(e.ost&&ORCATK[e.ost])return [ORCATK[e.ost].clip,e.of/30,.2];
+  return null;}
+function orcRot(P,bs,a,ax,pv){ // rotate bones bs by angle a about axis ax (0 = model Y, 1 = model X) around pivot pv
+  const h=a/2,c=Math.cos(h),s=Math.sin(h),rw=c,rx=ax?s:0,ry=ax?0:s,ca=Math.cos(a),sa=Math.sin(a);
+  for(const b of bs){const k=b*7,w=P[k],x=P[k+1],y=P[k+2],z=P[k+3];
+    P[k]=rw*w-rx*x-ry*y;P[k+1]=rw*x+rx*w+ry*z;P[k+2]=rw*y-rx*z+ry*w;P[k+3]=rw*z+rx*y-ry*x;
+    const tx=P[k+4]-pv[0],ty=P[k+5]-pv[1],tz=P[k+6]-pv[2];
+    if(ax){P[k+5]=ca*ty-sa*tz+pv[1];P[k+6]=sa*ty+ca*tz+pv[2];}else{P[k+4]=ca*tx+sa*tz+pv[0];P[k+6]=-sa*tx+ca*tz+pv[2];}}}
+function orcJoint(P,b,o){const k=b*7,w=P[k],x=P[k+1],y=P[k+2],z=P[k+3],h=ORC_D.head[b],px=h[0],py=h[1],pz=h[2];
+  // rotate head position by quaternion then add translation
+  const ix=w*px+y*pz-z*py,iy=w*py+z*px-x*pz,iz=w*pz+x*py-y*px,iw=-x*px-y*py-z*pz;
+  o[0]=ix*w+iw*-x+iy*-z-iz*-y+P[k+4];o[1]=iy*w+iw*-y+iz*-x-ix*-z+P[k+5];o[2]=iz*w+iw*-z+ix*-y-iy*-x+P[k+6];return o;}
+const ORC_UP=[1,2,3,4,5,6,7,8,9,10,11,12,13],ORC_HEAD=[5],ORC_NECK=[4],_opv=[0,0,0];
+function orcPose(e){orcInit();const now=G.time,dt=Math.min(.1,Math.max(0,now-(e._gt??now)));e._gt=now;const L=ORCLOC();
+  if(!e.an)e.an={key:'loc',ph:Math.random(),snap:new Float32Array(140),cur:new Float32Array(140),A:new Float32Array(140),B:new Float32Array(140),bl:1,fade:.2,spd:0,lw:0,look:0,fl:0};
+  const an=e.an,mvd=Math.abs(e.walk-(e._gw??e.walk));e._gw=e.walk;const rawS=dt>0?mvd/dt/1.4:0;an.spd=lerp(an.spd,rawS,Math.min(1,dt*6));e.gm=an.spd>.3?1:0;
+  const act=orcAct(e),key=act?act[0]+(e.dead?'#d':''):'loc';
+  if(key!==an.key){an.snap.set(an.cur);an.bl=0;an.fade=act?act[2]:(an.key==='loc'?.25:.38);an.key=key;}
+  let P_;
+  if(act)P_=orcSample(act[0],act[1],ORC.tmp);
+  else{ // locomotion: idle <-> walk <-> run, walk/run share one normalised phase so feet stay in step
+    const s=e.frozen>0?0:an.spd,wr=clamp((s-L.wn*1.05)/Math.max(.1,L.rn-L.wn*1.05),0,1),mv=clamp(s/(L.wn*.45),0,1);
+    an.lw=lerp(an.lw,mv,Math.min(1,dt*5));
+    const dur=lerp(L.wd,L.rd,wr),nat=lerp(L.wn,L.rn,wr);an.ph=(an.ph+dt/dur*clamp(s/nat,.55,1.8)*(an.lw>.05?1:0))%1;
+    orcSample('walk',an.ph*L.wd,an.A);if(wr>0){orcSample('run',an.ph*L.rd,an.B);gaMix(an.A,an.B,wr,an.A);}
+    an.it=(an.it||0)+dt;orcSample('idle',an.it,ORC.tmp);gaMix(ORC.tmp,an.A,ease(an.lw),ORC.tmp);P_=ORC.tmp;}
   if(an.bl<1){an.bl=Math.min(1,an.bl+dt/an.fade);gaMix(an.snap,P_,ease(an.bl),an.cur);}else an.cur.set(P_);
+  if(!e.dead){const C=an.cur;
+    // flinch: quick backwards jolt of the upper body on hits (no stagger, he keeps going)
+    an.fl=Math.max(0,an.fl-dt*3.2);if(an.fl>0){const k=Math.sin(Math.min(1,an.fl)*Math.PI*.5);orcJoint(C,1,_opv);orcRot(C,ORC_UP,-.2*k*(e.flS||1),1,_opv);}
+    // head tracks the player
+    const busy=e.ost==='spin'||e.ost==='pound'?0:e.ost?.4:1;let a=Math.atan2(P.x-e.x,P.z-e.z)-e.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));
+    an.look=lerp(an.look,clamp(a,-.75,.75)*busy,Math.min(1,dt*5));if(Math.abs(an.look)>.01){orcJoint(C,4,_opv);orcRot(C,ORC_NECK,an.look*.45,0,_opv);orcRot(C,ORC_HEAD,an.look,0,_opv);}}
   return gaMat(an.cur,ORC.Gm);}
+function orcHurt(e,amt){if(e.dead||amt<6||!e.an)return;e.an.fl=Math.min(1,e.an.fl+.35+amt/120);e.flS=e._crit?1.5:1;}
 function orcDraw(e,em){if(!orcOK())return false;if(!GOB.tried){GOB.tried=1;try{gobLoad();}catch(err){console.error(err);}}if(!ORC.tried){try{orcLoad();}catch(err){console.error(err);}}
-  let y=e.yOff;if(e.dead){const a=G.time-e.dt0-orcDur('die',1.25)-2.5;if(a>1.6)return 'gone';if(a>0)y-=a*1.4;}
+  let y=e.yOff;if(e.dead){const a=G.time-e.dt0-orcDur(e.dclip||'die',1.25)-2.5;if(a>1.6)return 'gone';if(a>0)y-=a*1.4;}
   if(!GOB.p||ORC.ready<ORC.need)return false;const pm=PP.main,u=GOB.u,g=n=>gl.getUniform(pm,U[n]);
   if(!em&&e.rage&&!e.dead){const p=.6+.4*Math.sin(G.time*(SET.calm?4:11)+e.seed);em=[.32*p,.03*p,.02*p];}
   gl.useProgram(GOB.p);gl.activeTexture(gl.TEXTURE5);gl.bindTexture(gl.TEXTURE_2D,PP.atlas);gl.activeTexture(gl.TEXTURE0);
@@ -3223,56 +3251,64 @@ function orcDraw(e,em){if(!orcOK())return false;if(!GOB.tried){GOB.tried=1;try{g
   gl.uniform3fv(u.uEm,em?(e.wind>0?em.map(x=>x*.3):em.map(x=>x*.6)):ZERO);gl.uniform3fv(u.uLP,LP);gl.uniform3fv(u.uLC,LC);gl.uniform1fv(u.uLR,LR);
   const r=rotM(e.yaw,0,0);gl.uniformMatrix4fv(u.uM,false,new Float32Array([r[0],r[3],r[6],0,r[1],r[4],r[7],0,r[2],r[5],r[8],0,e.x,y,e.z,1]));
   gl.uniformMatrix3fv(u.uR,false,new Float32Array([r[0],r[3],r[6],r[1],r[4],r[7],r[2],r[5],r[8]]));
-  const still=e._B&&e.dead&&G.time-e.dt0>orcDur('die',1.25)+.3;if(!still){if(!e._B)e._B=new Float32Array(240);e._B.set(orcPose(e));}gl.uniform4fv(u.uB,e._B);
+  const still=e._B&&e.dead&&G.time-e.dt0>orcDur(e.dclip||'die',1.25)+.3;if(!still){if(!e._B)e._B=new Float32Array(240);e._B.set(orcPose(e));}gl.uniform4fv(u.uB,e._B);
   gl.bindBuffer(gl.ARRAY_BUFFER,ORC.vb);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ORC.ib);const L=GOB.loc;
   gl.vertexAttribPointer(L[0],3,gl.FLOAT,false,80,0);gl.vertexAttribPointer(L[1],3,gl.FLOAT,false,80,12);gl.vertexAttribPointer(L[2],4,gl.FLOAT,false,80,24);gl.vertexAttribPointer(L[3],2,gl.FLOAT,false,80,40);
   gl.enableVertexAttribArray(4);gl.enableVertexAttribArray(5);gl.vertexAttribPointer(4,4,gl.FLOAT,false,80,48);gl.vertexAttribPointer(5,4,gl.FLOAT,false,80,64);
   for(const part in ORC_D.rng){const [o,n]=ORC_D.rng[part],T=ORC.tex[part];for(const [k,unit] of [['alb',2],['nor',3],['mra',4]]){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,T[k]);}
     gl.drawElements(gl.TRIANGLES,n,gl.UNSIGNED_SHORT,o*2);}
   gl.activeTexture(gl.TEXTURE0);gl.disableVertexAttribArray(4);gl.disableVertexAttribArray(5);gl.useProgram(pm);curMesh=null;return true;}
-function orcCorpse(e){if(!G.corpses)G.corpses=[];e.dt0=G.time;e.ost=null;e.wind=0;e.flash=0;G.corpses.push(e);}
-// brain: lumber in, heavy two-stage punch up close, leaping ground pound from mid range (or in place when crowded). Berserk below 40% HP: roar, then run and attack faster.
-const ORC_JT=()=>orcTrav('jump',ORCATK.pound.hit)||5.4;
-function orcStartPound(e,dist){const A=ORCATK.pound;e.ost='pound';e.of=0;e.hd=0;e.leap=clamp(dist-3,0,14)/ORC_JT();e.windMax=A.hit/30/A.rate;sfx('bwind',e.x,e.z);}
+function orcCorpse(e){if(!G.corpses)G.corpses=[];e.dt0=G.time;e.dclip=pick(['die','die2','die3']);e.ost=null;e.wind=0;e.flash=0;G.corpses.push(e);}
+// brain v2: scream on arrival, lumber in; up close picks punch / 2-hit swipe / double-fist smash / spin sweep (player beside or behind) / punch flurry (berserk);
+// leaping ground pound from mid range; flexes at a far-away player. Never staggers or freezes. Berserk below 40% HP: roar, run, faster attacks.
+const ORC_JT=()=>orcTrav('jump',ORCATK.pound.hits[0])||5.4;
+function orcStart(e,k,dist){const A=ORCATK[k];e.ost=k;e.of=0;e.hd=[];e.windMax=A.hits[0]/30/(A.wr||A.rate);
+  if(k==='pound')e.leap=clamp(dist-3,0,14)/ORC_JT();sfx(k==='pound'||k==='smash'?'bwind':'gwind',e.x,e.z);}
+function orcHit(e,A,i,dx,dz,dist,nx,nz){const facing=(dx*Math.sin(e.yaw)+dz*Math.cos(e.yaw))/dist,rg=e.rage?1.15:1;
+  sfx('swipe',e.x,e.z);sfx('bslam',e.x,e.z);P.shake=Math.max(P.shake,A.shake||.22);
+  const fx=A.arc<0?0:3.2;burst(e.x+Math.sin(e.yaw)*fx,e.yOff+(A.low?.4:2.4),e.z+Math.cos(e.yaw)*fx,'#ffe0a0',A.arc<0?18:10,A.arc<0?7:4.5,.3,.14,-6);
+  if(A.wave)orcPound(e,A);
+  else if(dist<A.r&&(A.arc<0||facing>A.arc)&&Math.abs(P.y-e.gy)<3.5){hurt(Math.round(A.dmg*rg),e.x,e.z,ENAME.orc);const kb=A.kb||9;P.vx+=nx*kb;P.vz+=nz*kb;}}
 function orcAI(e,dt,dx,dz,dist,nx,nz,sp){
   const face=k=>{let a=Math.atan2(dx,dz)-e.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));e.yaw+=a*Math.min(1,dt*k);};
-  if(e.ost===undefined){e.ost=null;e.ot=0;e.pcd=rnd(2.5,4.5);e.atk=Math.max(e.atk,rnd(.6,1.2));e.hitCd=0;}
-  e.ot+=dt;if(e.pcd>0)e.pcd-=dt;if(e.hitCd>0)e.hitCd-=dt;
+  if(e.ost===undefined){e.ost='scream';e.ot=0;e.rr=0;e.pcd=rnd(3,5);e.atk=Math.max(e.atk,rnd(.6,1.2));e.tcd=rnd(6,10);}
+  e.ot+=dt;if(e.pcd>0)e.pcd-=dt;if(e.tcd>0)e.tcd-=dt;e.frozen=0;e.hitReq=0;
   if(!e.rage&&e.hp<e.max*.4)e.rage=1;const rg=e.rage?1.3:1;
+  if(e.ost==='scream'){face(2.5);if(e.ot>.5&&!e.rr){e.rr=1;sfx('mroar',e.x,e.z);P.shake=Math.max(P.shake,.25);}if(e.ot>=orcDur('scream',1.2)-.25){e.ost=null;e.rr=0;}return [0,0,0];}
   if(e.ost==='roar'){face(2);if(e.ot>.3&&!e.rr){e.rr=1;sfx('mroar',e.x,e.z);P.shake=Math.max(P.shake,.3);}if(e.ot>=2.2)e.ost=null;return [0,0,0];}
-  if(e.ost==='hit'){if(e.ot>=orcDur('hit',1)-.4)e.ost=null;return [0,0,0];}
-  if(e.ost==='punch'){const A=ORCATK.punch,pre=e.of<A.hit;e.of+=dt*30*(pre?A.wr:A.rate)*rg;e.wind=e.of<A.hit?(A.hit-e.of)/30/(A.wr*rg):0;
-    if(pre)face(4);else if(e.of<A.hit+6&&dist>3){e.x+=Math.sin(e.yaw)*3.5*dt;e.z+=Math.cos(e.yaw)*3.5*dt;}
-    if(!e.hd&&e.of>=A.hit){e.hd=1;const facing=(dx*Math.sin(e.yaw)+dz*Math.cos(e.yaw))/dist;sfx('swipe',e.x,e.z);sfx('bslam',e.x,e.z);P.shake=Math.max(P.shake,.22);
-      burst(e.x+Math.sin(e.yaw)*3.4,e.yOff+2.6,e.z+Math.cos(e.yaw)*3.4,'#ffe0a0',10,4.5,.3,.14,-6);
-      if(dist<A.r&&facing>A.arc&&Math.abs(P.y-e.gy)<3.5){hurt(Math.round(A.dmg*(e.rage?1.15:1)),e.x,e.z,ENAME.orc);P.vx+=nx*9;P.vz+=nz*9;}}
-    if(e.of>=A.end){e.ost=null;e.wind=0;e.atk=(e.rage?.45:1.1)+rnd(0,.5);}return [0,0,0];}
-  if(e.ost==='pound'){const A=ORCATK.pound,pf=e.of;e.of+=dt*30*A.rate*(e.rage?1.12:1);const f=e.of;e.wind=f<A.hit?(A.hit-f)/30/A.rate:0;
-    if(f<14)face(3);const mv=(orcTrav('jump',f)-orcTrav('jump',pf))*e.leap;if(mv>0){e.x+=Math.sin(e.yaw)*mv;e.z+=Math.cos(e.yaw)*mv;}
-    if(!e.hd&&f>=A.hit){e.hd=1;orcPound(e);}
-    if(f>=A.end){e.ost=null;e.wind=0;e.pcd=e.rage?rnd(3.5,5):rnd(6,8.5);e.atk=Math.max(e.atk,.7);}return [0,0,0];}
+  if(e.ost==='flex'){face(1.5);if(e.ot>=2.6||dist<9){e.ost=null;e.tcd=rnd(9,14);}return [0,0,0];}
+  if(e.ost&&ORCATK[e.ost]){const A=ORCATK[e.ost],pf=e.of,pre=e.of<A.hits[0];e.of+=dt*30*(pre&&A.wr?A.wr:A.rate)*rg*(e.ost==='pound'&&e.rage?.87:1);const f=e.of;
+    e.wind=pre?(A.hits[0]-f)/30/((A.wr||A.rate)*rg):0;
+    if(e.ost==='pound'){if(f<14)face(3);}else if(e.ost!=='spin'&&(pre||A.hits.some((h,i)=>!e.hd[i])))face(pre?4:2.2);
+    const mv=(orcTrav(A.clip,f)-orcTrav(A.clip,pf))*(e.ost==='pound'?e.leap:(A.lunge||0)*(dist<3.6?0:1));if(mv>0){e.x+=Math.sin(e.yaw)*mv;e.z+=Math.cos(e.yaw)*mv;}
+    else if(e.ost==='punch'&&!pre&&f<A.hits[0]+6&&dist>3){e.x+=Math.sin(e.yaw)*3.5*dt;e.z+=Math.cos(e.yaw)*3.5*dt;}
+    for(let i=0;i<A.hits.length;i++)if(!e.hd[i]&&f>=A.hits[i]){e.hd[i]=1;if(e.ost==='pound')orcPound(e,A);else orcHit(e,A,i,dx,dz,dist,nx,nz);}
+    if(f>=A.end){const k=e.ost;e.ost=null;e.wind=0;if(k==='pound')e.pcd=e.rage?rnd(3.5,5):rnd(6,8.5);e.atk=Math.max(e.atk,(A.rest||1)*(e.rage?.45:1.1)+rnd(0,.5));}
+    return [0,0,0];}
   if(e.rage&&!e.rf){e.rf=1;e.ost='roar';e.ot=0;e.rr=0;e.wind=0;return [0,0,0];}
-  if(e.hitReq){e.hitReq=0;if(e.hitCd<=0&&!e.rage){e.hitCd=10;e.ost='hit';e.ot=0;return [0,0,0];}}
   if(e.atk<=0&&Math.abs(P.y-e.gy)<3.5){
-    if(dist<4.6){if(e.pcd<=0&&Math.random()<.3)orcStartPound(e,dist);else{e.ost='punch';e.of=0;e.hd=0;e.windMax=ORCATK.punch.hit/30/ORCATK.punch.wr;sfx('gwind',e.x,e.z);}}
-    else if(dist>6.5&&dist<18&&e.pcd<=0&&Math.random()<dt*1.4)orcStartPound(e,dist);}
+    if(dist<4.8){const facing=(dx*Math.sin(e.yaw)+dz*Math.cos(e.yaw))/dist;
+      if(e.pcd<=0&&Math.random()<.25)orcStart(e,'pound',dist);
+      else{const W=[['punch',3],['swipe',2.4],['smash',1.4],['spin',facing<.45?4:.7],['combo',e.rage?2.5:0]];let t=Math.random()*W.reduce((a,w)=>a+w[1],0),k='punch';for(const [n,w] of W){if((t-=w)<=0){k=n;break;}}orcStart(e,k,dist);}}
+    else if(dist>6.5&&dist<18&&e.pcd<=0&&Math.random()<dt*1.4)orcStart(e,'pound',dist);
+    else if(dist>16&&e.tcd<=0&&!e.rage&&Math.random()<dt*.3){e.ost='flex';e.ot=0;sfx('mroar',e.x,e.z);}}
   if(e.ost)return [0,0,0];
   face(e.rage?4:2.5);e._run=e.rage&&dist>3;if(dist>3.8)return [nx,nz,sp*(e._run?1.75:1)];return [0,0,0];}
 // slam: core damage under the fists, then a ground shockwave ring the player can jump over
-function orcPound(e){const A=ORCATK.pound,d=Math.hypot(P.x-e.x,P.z-e.z),lx=e.x+Math.sin(e.yaw)*1.8,lz=e.z+Math.cos(e.yaw)*1.8;
+function orcPound(e,A){A=A||ORCATK.pound;const d=Math.hypot(P.x-e.x,P.z-e.z),lx=e.x+Math.sin(e.yaw)*1.8,lz=e.z+Math.cos(e.yaw)*1.8;
   sfx('bslam',e.x,e.z);P.shake=Math.max(P.shake,d<12?.8:.4);rumble&&rumble(.9,.7,260);
   for(let i=0;i<30;i++){const a=i/30*6.28;burst(lx+Math.cos(a)*2.2,e.gy+.2,lz+Math.sin(a)*2.2,pick(['#ff6a1a','#ffd14a','#5a4a3a','#3a2a1e']),1,rnd(4,8),rnd(.4,.8),rnd(.15,.3),-10);}
   G.flash={x:lx,y:e.gy+.6,z:lz,i:1.6,r:10,c:[1.2,.55,.2]};try{addDecal(lx,e.gy+.02,lz,[0,1,0],5.5,'#140e0a',0,9);}catch(err){}
   let hit=false;if(d<A.core&&P.y-e.gy<2.2){hurt(Math.round(A.dmg*(e.rage?1.15:1)),e.x,e.z,ENAME.orc);hit=true;}
-  (G.oshock=G.oshock||[]).push({x:lx,z:lz,y:e.gy,t:0,R:A.R,spd:12,hit,dmg:A.wave*(e.rage?1.15:1)});}
+  (G.oshock=G.oshock||[]).push({x:lx,z:lz,y:e.gy,t:0,R:A.R,spd:A.R>8?12:10,hit,dmg:A.wave*(e.rage?1.15:1)});}
 function orcFxUpd(dt){if(!G.oshock)return;for(const w of G.oshock){w.t+=dt;const r=w.t*w.spd;
     if(!w.hit&&G.state==='play'){const dx=P.x-w.x,dz=P.z-w.z,d=Math.hypot(dx,dz)||.01;
       if(d<r+.5&&d>r-1.4&&P.y-groundT(P.x,P.z)<.5){w.hit=true;hurt(Math.round(w.dmg*(1-.45*d/w.R)),w.x,w.z,ENAME.orc);P.vx+=dx/d*10;P.vz+=dz/d*10;}}
     if(Math.random()<.7){const a=Math.random()*6.28;burst(w.x+Math.cos(a)*r,w.y+.1,w.z+Math.sin(a)*r,pick(['#5a4a3a','#ff8a3a','#3a2a1e']),1,2.5,.4,.12,-6);}}
   G.oshock=G.oshock.filter(w=>w.t*w.spd<w.R);}
 function orcFxDraw(){const CR=C('#ff3a1a'),CR2=C('#ff9a3a'),CW=C('#ffb060');
-  for(const e of G.enemies){if(e.dead||e.t!=='orc'||e.ost!=='pound'||!(e.of<ORCATK.pound.hit))continue;
-    const k=e.of/ORCATK.pound.hit,rest=(ORC_JT()-orcTrav('jump',e.of))*e.leap,x=e.x+Math.sin(e.yaw)*(rest+1.8),z=e.z+Math.cos(e.yaw)*(rest+1.8),y=groundT(x,z)+.04,
+  for(const e of G.enemies){if(e.dead||e.t!=='orc'||e.ost!=='pound'||!(e.of<ORCATK.pound.hits[0]))continue;
+    const k=e.of/ORCATK.pound.hits[0],rest=(ORC_JT()-orcTrav('jump',e.of))*e.leap,x=e.x+Math.sin(e.yaw)*(rest+1.8),z=e.z+Math.cos(e.yaw)*(rest+1.8),y=groundT(x,z)+.04,
       pul=.85+.15*Math.sin(G.time*(SET.calm?6:22)),R=ORCATK.pound.R,n=36;
     box(x,y,z,ORCATK.pound.core*2*(.4+.6*k),.03,ORCATK.pound.core*2*(.4+.6*k),G.time,0,0,flk()?CR:CR2,null,-1,1,true,MESH.t);
     for(let i=0;i<n;i++){if(i%2)continue;const a=i/n*6.283+G.time*.4;box(x+Math.cos(a)*R*k,y+.02,z+Math.sin(a)*R*k,.7*pul,.04,.18,-a+1.5708,0,0,CR,null,-1,1,true,MESH.t);}}
@@ -4391,7 +4427,7 @@ if(CQA.on){requestAnimationFrame(cqaFrame);
 
 <script>
 // ---- What's New popup ----
-const WN_NOTES=[{"t": "2026-11-28T08:30-06:00", "tag": "PATCH NOTES", "text": "A What's New popup after your first boon, and a Patch Notes page on the main menu with every update by day.", "pop": true}, {"t": "2026-11-28T08:02-06:00", "tag": "VERSION", "text": "The game's version number now shows on the title screen.", "pop": false}, {"t": "2026-11-27T23:15-06:00", "tag": "BOSS", "text": "The Creature now fights in three phases. In the last one he grows wings and attacks from the air.", "pop": true}, {"t": "2026-11-27T23:15-06:00", "tag": "BOSS", "text": "His health bar is split into three segments. Each break adds new attacks and makes him more aggressive.", "pop": false}, {"t": "2026-11-27T23:13-06:00", "tag": "FOREST", "text": "Forest rooms are open now, with a giant World Tree on the skyline.", "pop": true}, {"t": "2026-11-27T23:13-06:00", "tag": "FOREST", "text": "Rooms grow with the number of enemies, with less clutter in the early rooms.", "pop": true}, {"t": "2026-11-27T23:13-06:00", "tag": "ENEMIES", "text": "Enemies are easier to spot against the forest.", "pop": true}, {"t": "2026-11-27T23:13-06:00", "tag": "VIDEO", "text": "New default video settings: sharper image, HD enemy models, light CRT effect.", "pop": false}, {"t": "2026-11-27T23:05-06:00", "tag": "SPELLS", "text": "Elemental effects on enemies are subtler, so you can still see who you are hitting.", "pop": true}, {"t": "2026-11-27T22:08-06:00", "tag": "CONTROLLER", "text": "Settings sliders work on the controller: A to grab, left and right to adjust, B to cancel.", "pop": false}, {"t": "2026-11-27T21:57-06:00", "tag": "ORC", "text": "The Orc Berserker hits harder and takes more to bring down.", "pop": true}, {"t": "2026-11-27T21:48-06:00", "tag": "PORTALS", "text": "Walking into any part of the exit portal now takes you through.", "pop": false}, {"t": "2026-11-27T14:06-06:00", "tag": "CONTROLLER", "text": "LB dashes and RB throws the Arcane Bomb. Y or D-pad right switches weapons.", "pop": true}, {"t": "2026-11-27T11:17-06:00", "tag": "CONTROLLER", "text": "Controllers reconnect properly, and more controller types work.", "pop": false}, {"t": "2026-11-27T10:12-06:00", "tag": "STATS", "text": "Anonymous playtest stats help tune the game. You can turn them off in Settings › Gameplay.", "pop": false}, {"t": "2026-11-27T10:01-06:00", "tag": "ENEMIES", "text": "New heavy enemy: the Orc Berserker.", "pop": false}, {"t": "2026-11-27T09:36-06:00", "tag": "CONTROLLER", "text": "Aim assist on the controller, and menus can be navigated with the pad.", "pop": false}, {"t": "2026-11-27T09:30-06:00", "tag": "ARMS", "text": "New armored first-person arms.", "pop": false}, {"t": "2026-11-26T23:27-06:00", "tag": "HAND CANNON", "text": "Hand cannon reload swaps the cylinder and is faster. Aiming zooms in more.", "pop": false}, {"t": "2026-11-26T23:18-06:00", "tag": "LEGENDS", "text": "Hall of Legends is online, shared across every player and device.", "pop": false}, {"t": "2026-11-26T23:17-06:00", "tag": "WEAPONS", "text": "Hand cannon and sawed-off are semi-auto.", "pop": false}, {"t": "2026-11-26T23:01-06:00", "tag": "HAND CANNON", "text": "New hand cannon model with iron-sight aiming.", "pop": false}, {"t": "2026-11-26T22:43-06:00", "tag": "EMBERFALL", "text": "Emberfall is now the Obsidian Fang.", "pop": false}, {"t": "2026-11-26T22:34-06:00", "tag": "ENEMIES", "text": "The Rot Slime replaces the Rot Bloater.", "pop": false}, {"t": "2026-11-26T22:32-06:00", "tag": "BOONS", "text": "Arcane Volley is the dash boon: dashing fires homing teal missiles.", "pop": false}, {"t": "2026-11-26T21:38-06:00", "tag": "FIRE", "text": "New fire effects: braziers, blue wraith fireballs, red Creature fireballs.", "pop": false}, {"t": "2026-11-26T21:21-06:00", "tag": "PORTALS", "text": "New swirling rift portals, and a bigger exit portal.", "pop": false}, {"t": "2026-11-26T20:37-06:00", "tag": "PICKUPS", "text": "New medkit and ammo pickups, plus a reticle for each weapon.", "pop": false}, {"t": "2026-11-26T20:23-06:00", "tag": "HEROES", "text": "Pick your hero before a run. Each hero keeps stats and run history, ranked in the Hall of Legends.", "pop": false}, {"t": "2026-11-26T19:43-06:00", "tag": "UI", "text": "New main menu, settings, boon cards and in-game banners. The boss is now The Creature.", "pop": false}, {"t": "2026-11-26T19:16-06:00", "tag": "NAME", "text": "The game is now called Cousin Quest.", "pop": false}, {"t": "2026-11-26T18:47-06:00", "tag": "CONTROLLER", "text": "Xbox controller fix for Chrome on Windows.", "pop": false}, {"t": "2026-11-26T15:15-06:00", "tag": "WEAPONS", "text": "New melee weapon: the Elf Blade.", "pop": false}, {"t": "2026-11-26T14:13-06:00", "tag": "HUD", "text": "New HUD: health bar, Mana Heat, ability cells, enemy names.", "pop": false}, {"t": "2026-11-26T13:59-06:00", "tag": "SPELLS", "text": "Elemental effects: fire, frost and arcane chain lightning.", "pop": false}, {"t": "2026-11-26T13:54-06:00", "tag": "PORTALS", "text": "Monsters arrive through rift portals.", "pop": false}, {"t": "2026-11-26T13:47-06:00", "tag": "MANA", "text": "Overheating your mana causes a misfire. Press R to vent.", "pop": false}, {"t": "2026-11-26T13:34-06:00", "tag": "SPELLS", "text": "Arcane Bomb: a thrown burst of teal fire on G.", "pop": false}, {"t": "2026-11-26T13:17-06:00", "tag": "SPELLS", "text": "Mending Light: a left-hand heal spell on F.", "pop": false}, {"t": "2026-11-26T07:38-06:00", "tag": "MUSIC", "text": "Adaptive dark-fantasy music.", "pop": false}, {"t": "2026-11-23T17:57-06:00", "tag": "BOSS", "text": "New boss monster model.", "pop": false}, {"t": "2026-11-23T17:47-06:00", "tag": "WEAPONS", "text": "Sawed-off hits harder, with a stronger double blast.", "pop": false}, {"t": "2026-11-23T11:17-06:00", "tag": "ENEMIES", "text": "HD skeletons and zombie hordes, with smoother performance.", "pop": false}, {"t": "2026-11-23T11:17-06:00", "tag": "ROOMS", "text": "Room select on the main menu.", "pop": false}, {"t": "2026-11-22T17:44-06:00", "tag": "WEAPONS", "text": "Sawed-off buff: more damage, spread and range.", "pop": false}, {"t": "2026-11-22T15:01-06:00", "tag": "ENEMIES", "text": "Wraiths have a death animation and their bodies stay for the room.", "pop": false}, {"t": "2026-11-22T14:39-06:00", "tag": "ENEMIES", "text": "New HD wraith.", "pop": false}, {"t": "2026-11-22T13:50-06:00", "tag": "RIFLE", "text": "Auto rifle reload, fire and draw animations.", "pop": false}, {"t": "2026-11-22T12:52-06:00", "tag": "LAUNCH", "text": "First playtest build goes up on the website.", "pop": false}].map(e=>Object.assign({ms:Date.parse(e.t),day:e.t.slice(0,10)},e)).sort((a,b)=>b.ms-a.ms);
+const WN_NOTES=[{"t": "2026-11-28T08:35-06:00", "tag": "ENEMIES", "text": "Orc Berserker: new 2-hit swipe, spin sweep, double-fist smash and berserk punch flurry, plus a scream, a taunt and three deaths.", "pop": true}, {"t": "2026-11-28T08:35-06:00", "tag": "ENEMIES", "text": "Orc Berserker can no longer be frozen or staggered, and his animations blend more smoothly.", "pop": true}, {"t": "2026-11-28T08:30-06:00", "tag": "PATCH NOTES", "text": "A What's New popup after your first boon, and a Patch Notes page on the main menu with every update by day.", "pop": true}, {"t": "2026-11-28T08:02-06:00", "tag": "VERSION", "text": "The game's version number now shows on the title screen.", "pop": false}, {"t": "2026-11-27T23:15-06:00", "tag": "BOSS", "text": "The Creature now fights in three phases. In the last one he grows wings and attacks from the air.", "pop": true}, {"t": "2026-11-27T23:15-06:00", "tag": "BOSS", "text": "His health bar is split into three segments. Each break adds new attacks and makes him more aggressive.", "pop": false}, {"t": "2026-11-27T23:13-06:00", "tag": "FOREST", "text": "Forest rooms are open now, with a giant World Tree on the skyline.", "pop": true}, {"t": "2026-11-27T23:13-06:00", "tag": "FOREST", "text": "Rooms grow with the number of enemies, with less clutter in the early rooms.", "pop": true}, {"t": "2026-11-27T23:13-06:00", "tag": "ENEMIES", "text": "Enemies are easier to spot against the forest.", "pop": true}, {"t": "2026-11-27T23:13-06:00", "tag": "VIDEO", "text": "New default video settings: sharper image, HD enemy models, light CRT effect.", "pop": false}, {"t": "2026-11-27T23:05-06:00", "tag": "SPELLS", "text": "Elemental effects on enemies are subtler, so you can still see who you are hitting.", "pop": true}, {"t": "2026-11-27T22:08-06:00", "tag": "CONTROLLER", "text": "Settings sliders work on the controller: A to grab, left and right to adjust, B to cancel.", "pop": false}, {"t": "2026-11-27T21:57-06:00", "tag": "ORC", "text": "The Orc Berserker hits harder and takes more to bring down.", "pop": true}, {"t": "2026-11-27T21:48-06:00", "tag": "PORTALS", "text": "Walking into any part of the exit portal now takes you through.", "pop": false}, {"t": "2026-11-27T14:06-06:00", "tag": "CONTROLLER", "text": "LB dashes and RB throws the Arcane Bomb. Y or D-pad right switches weapons.", "pop": true}, {"t": "2026-11-27T11:17-06:00", "tag": "CONTROLLER", "text": "Controllers reconnect properly, and more controller types work.", "pop": false}, {"t": "2026-11-27T10:12-06:00", "tag": "STATS", "text": "Anonymous playtest stats help tune the game. You can turn them off in Settings › Gameplay.", "pop": false}, {"t": "2026-11-27T10:01-06:00", "tag": "ENEMIES", "text": "New heavy enemy: the Orc Berserker.", "pop": false}, {"t": "2026-11-27T09:36-06:00", "tag": "CONTROLLER", "text": "Aim assist on the controller, and menus can be navigated with the pad.", "pop": false}, {"t": "2026-11-27T09:30-06:00", "tag": "ARMS", "text": "New armored first-person arms.", "pop": false}, {"t": "2026-11-26T23:27-06:00", "tag": "HAND CANNON", "text": "Hand cannon reload swaps the cylinder and is faster. Aiming zooms in more.", "pop": false}, {"t": "2026-11-26T23:18-06:00", "tag": "LEGENDS", "text": "Hall of Legends is online, shared across every player and device.", "pop": false}, {"t": "2026-11-26T23:17-06:00", "tag": "WEAPONS", "text": "Hand cannon and sawed-off are semi-auto.", "pop": false}, {"t": "2026-11-26T23:01-06:00", "tag": "HAND CANNON", "text": "New hand cannon model with iron-sight aiming.", "pop": false}, {"t": "2026-11-26T22:43-06:00", "tag": "EMBERFALL", "text": "Emberfall is now the Obsidian Fang.", "pop": false}, {"t": "2026-11-26T22:34-06:00", "tag": "ENEMIES", "text": "The Rot Slime replaces the Rot Bloater.", "pop": false}, {"t": "2026-11-26T22:32-06:00", "tag": "BOONS", "text": "Arcane Volley is the dash boon: dashing fires homing teal missiles.", "pop": false}, {"t": "2026-11-26T21:38-06:00", "tag": "FIRE", "text": "New fire effects: braziers, blue wraith fireballs, red Creature fireballs.", "pop": false}, {"t": "2026-11-26T21:21-06:00", "tag": "PORTALS", "text": "New swirling rift portals, and a bigger exit portal.", "pop": false}, {"t": "2026-11-26T20:37-06:00", "tag": "PICKUPS", "text": "New medkit and ammo pickups, plus a reticle for each weapon.", "pop": false}, {"t": "2026-11-26T20:23-06:00", "tag": "HEROES", "text": "Pick your hero before a run. Each hero keeps stats and run history, ranked in the Hall of Legends.", "pop": false}, {"t": "2026-11-26T19:43-06:00", "tag": "UI", "text": "New main menu, settings, boon cards and in-game banners. The boss is now The Creature.", "pop": false}, {"t": "2026-11-26T19:16-06:00", "tag": "NAME", "text": "The game is now called Cousin Quest.", "pop": false}, {"t": "2026-11-26T18:47-06:00", "tag": "CONTROLLER", "text": "Xbox controller fix for Chrome on Windows.", "pop": false}, {"t": "2026-11-26T15:15-06:00", "tag": "WEAPONS", "text": "New melee weapon: the Elf Blade.", "pop": false}, {"t": "2026-11-26T14:13-06:00", "tag": "HUD", "text": "New HUD: health bar, Mana Heat, ability cells, enemy names.", "pop": false}, {"t": "2026-11-26T13:59-06:00", "tag": "SPELLS", "text": "Elemental effects: fire, frost and arcane chain lightning.", "pop": false}, {"t": "2026-11-26T13:54-06:00", "tag": "PORTALS", "text": "Monsters arrive through rift portals.", "pop": false}, {"t": "2026-11-26T13:47-06:00", "tag": "MANA", "text": "Overheating your mana causes a misfire. Press R to vent.", "pop": false}, {"t": "2026-11-26T13:34-06:00", "tag": "SPELLS", "text": "Arcane Bomb: a thrown burst of teal fire on G.", "pop": false}, {"t": "2026-11-26T13:17-06:00", "tag": "SPELLS", "text": "Mending Light: a left-hand heal spell on F.", "pop": false}, {"t": "2026-11-26T07:38-06:00", "tag": "MUSIC", "text": "Adaptive dark-fantasy music.", "pop": false}, {"t": "2026-11-23T17:57-06:00", "tag": "BOSS", "text": "New boss monster model.", "pop": false}, {"t": "2026-11-23T17:47-06:00", "tag": "WEAPONS", "text": "Sawed-off hits harder, with a stronger double blast.", "pop": false}, {"t": "2026-11-23T11:17-06:00", "tag": "ENEMIES", "text": "HD skeletons and zombie hordes, with smoother performance.", "pop": false}, {"t": "2026-11-23T11:17-06:00", "tag": "ROOMS", "text": "Room select on the main menu.", "pop": false}, {"t": "2026-11-22T17:44-06:00", "tag": "WEAPONS", "text": "Sawed-off buff: more damage, spread and range.", "pop": false}, {"t": "2026-11-22T15:01-06:00", "tag": "ENEMIES", "text": "Wraiths have a death animation and their bodies stay for the room.", "pop": false}, {"t": "2026-11-22T14:39-06:00", "tag": "ENEMIES", "text": "New HD wraith.", "pop": false}, {"t": "2026-11-22T13:50-06:00", "tag": "RIFLE", "text": "Auto rifle reload, fire and draw animations.", "pop": false}, {"t": "2026-11-22T12:52-06:00", "tag": "LAUNCH", "text": "First playtest build goes up on the website.", "pop": false}].map(e=>Object.assign({ms:Date.parse(e.t),day:e.t.slice(0,10)},e)).sort((a,b)=>b.ms-a.ms);
 const WN_KEY='cousinquest.whatsnew',WN={open:false};
 function wnRecent(){if(!WN_NOTES.length)return[];const top=WN_NOTES[0].ms;return WN_NOTES.filter(e=>e.pop&&top-e.ms<=864e5);}
 function wnVer(){const r=wnRecent();return r.length?r[0].t:'';}
