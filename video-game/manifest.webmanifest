@@ -1,0 +1,19 @@
+{
+  "id": "/video-game/",
+  "name": "Cousin Quest",
+  "short_name": "Cousin Quest",
+  "description": "A first-person dark fantasy roguelite shooter. Wizards with guns.",
+  "start_url": "/video-game/",
+  "scope": "/video-game/",
+  "display": "standalone",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#000000",
+  "theme_color": "#060e0f",
+  "categories": ["games"],
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
