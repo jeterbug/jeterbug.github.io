@@ -412,13 +412,21 @@ button.ghost{background:transparent;color:#c8b49a;box-shadow:none;border:2px sol
 .bset .bi{display:flex;flex-direction:column;align-items:center;gap:6px;font:700 10px 'Cinzel',serif;letter-spacing:.14em;color:var(--mut);max-width:90px;text-align:center}
 
 /* what's new */
-.wnp{position:relative;width:560px;max-width:92vw;margin:0 auto;padding:26px 34px 24px;background:linear-gradient(180deg,#0b1617,#060c0d 60%,#050909);
+.wnp{position:relative;width:580px;max-width:92vw;margin:0 auto;padding:26px 34px 24px;background:linear-gradient(180deg,#0b1617,#060c0d 60%,#050909);
   clip-path:polygon(0 18px,18px 0,calc(100% - 18px) 0,100% 18px,100% calc(100% - 18px),calc(100% - 18px) 100%,18px 100%,0 calc(100% - 18px));box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
 .wnp:before{content:'';position:absolute;inset:6px;clip-path:inherit;box-shadow:inset 0 0 0 1px rgba(42,255,216,.3);pointer-events:none}
-.wnp ul{list-style:none;margin:14px 0 20px;padding:0;text-align:left}
-.wnp li{display:flex;gap:12px;align-items:baseline;padding:7px 10px;margin-top:5px;background:rgba(255,255,255,.03);font:500 16px/1.35 'Spectral',serif;color:#dce8e4}
-.wnp li:before{content:'';flex:none;width:7px;height:7px;transform:rotate(45deg) translateY(-2px);background:var(--tl);box-shadow:0 0 8px var(--tl)}
-.wnp li b{font:700 11px 'Cinzel',serif;letter-spacing:.16em;color:var(--tl);margin-right:6px}
+.wnp ul,.pnn ul{list-style:none;margin:14px 0 20px;padding:0;text-align:left}
+.wnp li,.pnn li{display:flex;gap:12px;align-items:baseline;padding:7px 10px;margin-top:5px;background:rgba(255,255,255,.03);font:500 16px/1.35 'Spectral',serif;color:#dce8e4}
+.wnp li:before,.pnn li:before{content:'';flex:none;width:7px;height:7px;transform:rotate(45deg) translateY(-2px);background:var(--tl);box-shadow:0 0 8px var(--tl)}
+.wnp li b,.pnn li b{font:700 11px 'Cinzel',serif;letter-spacing:.16em;color:var(--tl);margin-right:6px}
+.wnp .ovb{flex-direction:row;justify-content:center;flex-wrap:wrap}#overlay .wnp .ovb button.bt{min-width:190px}
+.pnl.pnn{grid-template-columns:240px 1fr}.pnl.pnn .hd,.pnl.pnn .ft{grid-column:1/3}
+.pnn .rows h3{font:800 20px 'Cinzel',serif;letter-spacing:.16em;margin:16px 0 2px;color:var(--ink)}
+.pnn .rows .cnt{font:600 13px 'Spectral',serif;color:var(--mut)}
+.pnn li.mn2:before{background:#3d5a57;box-shadow:none}.pnn li.mn2{color:#b8ccc8}
+#overlay .rail button.tb .d{font:600 11px 'Spectral',serif;letter-spacing:.04em;color:var(--mut);margin-left:auto}
+#overlay button.pnb{all:unset;cursor:pointer;margin-left:18px;padding:4px 10px;color:var(--ink);box-shadow:inset 0 0 0 1px rgba(42,255,216,.35);letter-spacing:.2em}
+#overlay button.pnb:hover,#overlay button.pnb.gpf{background:rgba(42,255,216,.16);color:#fff;outline:none!important}
 @media (max-height:700px){.wnp li{padding:4px 10px;font-size:14px}.wnp{padding:18px 26px}}
 /* boon cards */
 .pkh{text-align:center;margin-bottom:6px}.pkh .kick{font:700 12px 'Cinzel',serif;letter-spacing:.5em;color:var(--tl)}
@@ -580,7 +588,7 @@ button.ghost{background:transparent;color:#c8b49a;box-shadow:none;border:2px sol
 <div id="tabnote">Connect a <b>controller</b> or a <b>mouse + keyboard</b> to play</div><div id="mobblk"><svg class="rune" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3"><circle cx="50" cy="50" r="44"/><circle cx="50" cy="50" r="30" stroke-width="2" stroke-dasharray="4 6"/><path d="M50 12 L50 88 M50 30 L34 50 L50 70 L66 50 Z"/></svg><h1>COUSIN<span>//</span>QUEST</h1><p>The rifts only open on a <b>desktop or laptop</b>.</p><p class="m">Open this link on a computer with a keyboard and mouse (or a controller) to play.</p></div>
 <script>
 // ---- game version (bump GAME_BUILD each build) ----
-const GAME_BUILD=98;
+const GAME_BUILD=99;
 function gameVer(n=GAME_BUILD){return n<100?'v0.'+n:'v0.'+Math.floor(n/100)+'.'+(n%100);}
 </script>
 <script>(function(){try{const mm=q=>window.matchMedia&&matchMedia(q).matches;const touch=mm('(pointer:coarse)')&&!mm('(any-pointer:fine)'),ua=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -3556,7 +3564,7 @@ function titleScreen(){if(!HERO){heroScreen();return;}G.state='title';$('hud').c
   <div class="ex"><button class="mn" onclick="roomSelect('title')">ROOM SELECT</button><button class="mn" onclick="openEditor()">LEVEL EDITOR</button><button class="mn" onclick="creditsScreen()">CREDITS</button></div></nav></div>
   <div class="lqcard"><div class="top">${lqHex(H)}<div><div class="k">PLAYING AS</div><div class="nm">${lqE(H.name)}</div></div>${H.wins?`<span class="lqcr" style="margin-left:auto">${LQCROWN}${H.wins}</span>`:''}</div>
   <div class="row"><div><b>#${lqRank(H)}</b>RANK</div><div><b>${lqN(H.kills)}</b>KILLS</div><div><b>${H.fast?fmt(H.fast):'—'}</b>FASTEST</div></div><button class="lqsw" onclick="heroScreen()"><span class="kcp g">C</span> &nbsp;CHANGE HERO</button></div>
-  <div class="ttlf"><span><span class="kcp">W</span> <span class="kcp">S</span> &nbsp;CHOOSE &nbsp;&nbsp; <span class="kcp">ENTER</span> &nbsp;SELECT &nbsp;&nbsp; <b>${PAD.connected?'CONTROLLER READY':'MOUSE + KEYBOARD'}</b></span><span>PRE-ALPHA BUILD <b class="gver">${gameVer()}</b></span></div>`,false,'ttl');}
+  <div class="ttlf"><span><span class="kcp">W</span> <span class="kcp">S</span> &nbsp;CHOOSE &nbsp;&nbsp; <span class="kcp">ENTER</span> &nbsp;SELECT &nbsp;&nbsp; <b>${PAD.connected?'CONTROLLER READY':'MOUSE + KEYBOARD'}</b></span><span>PRE-ALPHA BUILD <b class="gver">${gameVer()}</b><button class="pnb" onclick="wnNotes(null,'title')">PATCH NOTES</button></span></div>`,false,'ttl');}
 function helpScreen(){const r=(a,b)=>`<div><span>${a}</span><em>${b}</em></div>`;
   show(`<div class="pnl one"><div class="hd"><h2>HOW TO PLAY</h2><div class="sp"></div><div class="hint"><span><span class="kcp g">ESC</span> &nbsp;BACK</span></div></div><div class="body">
   <div class="grp">KEYBOARD + MOUSE</div><div class="ctab">${r('Move','WASD')}${r('Jump (double)','SPACE')}${r('Dash','SHIFT')}${r('Fire','LEFT CLICK')}${r('Aim / alt fire','RIGHT CLICK')}${r('Reload · vent misfire','R')}${r('Switch weapon','1 2 3 4 · WHEEL · Q')}${r('Mending Light (heal)','F')}${r('Arcane Bomb','G')}${r('Emberfall (when charged)','E')}${r('Music on / off','M')}${r('Pause','ESC')}</div>
@@ -4383,29 +4391,39 @@ if(CQA.on){requestAnimationFrame(cqaFrame);
 
 <script>
 // ---- What's New popup ----
-const WN_VER='v97',WN_KEY='cousinquest.whatsnew';
-const WN_ITEMS=[
- ['BOSS','The Creature now fights in three phases. In the last one he grows wings and attacks from the air.'],
- ['FOREST','Open edges, a giant World Tree on the skyline, and rooms that grow with the enemy count.'],
- ['ENEMIES','Easier to spot against the forest.'],
- ['SPELLS','Elemental effects on enemies are subtler, so you can still see who you are hitting.'],
- ['ORC','The Orc Berserker hits harder and takes more to bring down.'],
- ['CONTROLLER','LB dashes, RB throws the Arcane Bomb. Sliders work with the pad, and reconnecting a controller is fixed.']];
-const WN={open:false};
-function wnSeen(){try{return localStorage.getItem(WN_KEY)===WN_VER;}catch(e){return false;}}
-function wnShow(){WN.open=true;G.state='pause';firing=false;P.adsHeld=false;releaseLock();
+const WN_NOTES=[{"t": "2026-11-28T08:30-06:00", "tag": "PATCH NOTES", "text": "A What's New popup after your first boon, and a Patch Notes page on the main menu with every update by day.", "pop": true}, {"t": "2026-11-28T08:02-06:00", "tag": "VERSION", "text": "The game's version number now shows on the title screen.", "pop": false}, {"t": "2026-11-27T23:15-06:00", "tag": "BOSS", "text": "The Creature now fights in three phases. In the last one he grows wings and attacks from the air.", "pop": true}, {"t": "2026-11-27T23:15-06:00", "tag": "BOSS", "text": "His health bar is split into three segments. Each break adds new attacks and makes him more aggressive.", "pop": false}, {"t": "2026-11-27T23:13-06:00", "tag": "FOREST", "text": "Forest rooms are open now, with a giant World Tree on the skyline.", "pop": true}, {"t": "2026-11-27T23:13-06:00", "tag": "FOREST", "text": "Rooms grow with the number of enemies, with less clutter in the early rooms.", "pop": true}, {"t": "2026-11-27T23:13-06:00", "tag": "ENEMIES", "text": "Enemies are easier to spot against the forest.", "pop": true}, {"t": "2026-11-27T23:13-06:00", "tag": "VIDEO", "text": "New default video settings: sharper image, HD enemy models, light CRT effect.", "pop": false}, {"t": "2026-11-27T23:05-06:00", "tag": "SPELLS", "text": "Elemental effects on enemies are subtler, so you can still see who you are hitting.", "pop": true}, {"t": "2026-11-27T22:08-06:00", "tag": "CONTROLLER", "text": "Settings sliders work on the controller: A to grab, left and right to adjust, B to cancel.", "pop": false}, {"t": "2026-11-27T21:57-06:00", "tag": "ORC", "text": "The Orc Berserker hits harder and takes more to bring down.", "pop": true}, {"t": "2026-11-27T21:48-06:00", "tag": "PORTALS", "text": "Walking into any part of the exit portal now takes you through.", "pop": false}, {"t": "2026-11-27T14:06-06:00", "tag": "CONTROLLER", "text": "LB dashes and RB throws the Arcane Bomb. Y or D-pad right switches weapons.", "pop": true}, {"t": "2026-11-27T11:17-06:00", "tag": "CONTROLLER", "text": "Controllers reconnect properly, and more controller types work.", "pop": false}, {"t": "2026-11-27T10:12-06:00", "tag": "STATS", "text": "Anonymous playtest stats help tune the game. You can turn them off in Settings › Gameplay.", "pop": false}, {"t": "2026-11-27T10:01-06:00", "tag": "ENEMIES", "text": "New heavy enemy: the Orc Berserker.", "pop": false}, {"t": "2026-11-27T09:36-06:00", "tag": "CONTROLLER", "text": "Aim assist on the controller, and menus can be navigated with the pad.", "pop": false}, {"t": "2026-11-27T09:30-06:00", "tag": "ARMS", "text": "New armored first-person arms.", "pop": false}, {"t": "2026-11-26T23:27-06:00", "tag": "HAND CANNON", "text": "Hand cannon reload swaps the cylinder and is faster. Aiming zooms in more.", "pop": false}, {"t": "2026-11-26T23:18-06:00", "tag": "LEGENDS", "text": "Hall of Legends is online, shared across every player and device.", "pop": false}, {"t": "2026-11-26T23:17-06:00", "tag": "WEAPONS", "text": "Hand cannon and sawed-off are semi-auto.", "pop": false}, {"t": "2026-11-26T23:01-06:00", "tag": "HAND CANNON", "text": "New hand cannon model with iron-sight aiming.", "pop": false}, {"t": "2026-11-26T22:43-06:00", "tag": "EMBERFALL", "text": "Emberfall is now the Obsidian Fang.", "pop": false}, {"t": "2026-11-26T22:34-06:00", "tag": "ENEMIES", "text": "The Rot Slime replaces the Rot Bloater.", "pop": false}, {"t": "2026-11-26T22:32-06:00", "tag": "BOONS", "text": "Arcane Volley is the dash boon: dashing fires homing teal missiles.", "pop": false}, {"t": "2026-11-26T21:38-06:00", "tag": "FIRE", "text": "New fire effects: braziers, blue wraith fireballs, red Creature fireballs.", "pop": false}, {"t": "2026-11-26T21:21-06:00", "tag": "PORTALS", "text": "New swirling rift portals, and a bigger exit portal.", "pop": false}, {"t": "2026-11-26T20:37-06:00", "tag": "PICKUPS", "text": "New medkit and ammo pickups, plus a reticle for each weapon.", "pop": false}, {"t": "2026-11-26T20:23-06:00", "tag": "HEROES", "text": "Pick your hero before a run. Each hero keeps stats and run history, ranked in the Hall of Legends.", "pop": false}, {"t": "2026-11-26T19:43-06:00", "tag": "UI", "text": "New main menu, settings, boon cards and in-game banners. The boss is now The Creature.", "pop": false}, {"t": "2026-11-26T19:16-06:00", "tag": "NAME", "text": "The game is now called Cousin Quest.", "pop": false}, {"t": "2026-11-26T18:47-06:00", "tag": "CONTROLLER", "text": "Xbox controller fix for Chrome on Windows.", "pop": false}, {"t": "2026-11-26T15:15-06:00", "tag": "WEAPONS", "text": "New melee weapon: the Elf Blade.", "pop": false}, {"t": "2026-11-26T14:13-06:00", "tag": "HUD", "text": "New HUD: health bar, Mana Heat, ability cells, enemy names.", "pop": false}, {"t": "2026-11-26T13:59-06:00", "tag": "SPELLS", "text": "Elemental effects: fire, frost and arcane chain lightning.", "pop": false}, {"t": "2026-11-26T13:54-06:00", "tag": "PORTALS", "text": "Monsters arrive through rift portals.", "pop": false}, {"t": "2026-11-26T13:47-06:00", "tag": "MANA", "text": "Overheating your mana causes a misfire. Press R to vent.", "pop": false}, {"t": "2026-11-26T13:34-06:00", "tag": "SPELLS", "text": "Arcane Bomb: a thrown burst of teal fire on G.", "pop": false}, {"t": "2026-11-26T13:17-06:00", "tag": "SPELLS", "text": "Mending Light: a left-hand heal spell on F.", "pop": false}, {"t": "2026-11-26T07:38-06:00", "tag": "MUSIC", "text": "Adaptive dark-fantasy music.", "pop": false}, {"t": "2026-11-23T17:57-06:00", "tag": "BOSS", "text": "New boss monster model.", "pop": false}, {"t": "2026-11-23T17:47-06:00", "tag": "WEAPONS", "text": "Sawed-off hits harder, with a stronger double blast.", "pop": false}, {"t": "2026-11-23T11:17-06:00", "tag": "ENEMIES", "text": "HD skeletons and zombie hordes, with smoother performance.", "pop": false}, {"t": "2026-11-23T11:17-06:00", "tag": "ROOMS", "text": "Room select on the main menu.", "pop": false}, {"t": "2026-11-22T17:44-06:00", "tag": "WEAPONS", "text": "Sawed-off buff: more damage, spread and range.", "pop": false}, {"t": "2026-11-22T15:01-06:00", "tag": "ENEMIES", "text": "Wraiths have a death animation and their bodies stay for the room.", "pop": false}, {"t": "2026-11-22T14:39-06:00", "tag": "ENEMIES", "text": "New HD wraith.", "pop": false}, {"t": "2026-11-22T13:50-06:00", "tag": "RIFLE", "text": "Auto rifle reload, fire and draw animations.", "pop": false}, {"t": "2026-11-22T12:52-06:00", "tag": "LAUNCH", "text": "First playtest build goes up on the website.", "pop": false}].map(e=>Object.assign({ms:Date.parse(e.t),day:e.t.slice(0,10)},e)).sort((a,b)=>b.ms-a.ms);
+const WN_KEY='cousinquest.whatsnew',WN={open:false};
+function wnRecent(){if(!WN_NOTES.length)return[];const top=WN_NOTES[0].ms;return WN_NOTES.filter(e=>e.pop&&top-e.ms<=864e5);}
+function wnVer(){const r=wnRecent();return r.length?r[0].t:'';}
+function wnSeen(){const v=wnVer();if(!v)return true;try{return localStorage.getItem(WN_KEY)===v;}catch(e){return false;}}
+function wnDays(){const m=new Map();for(const e of WN_NOTES){if(!m.has(e.day))m.set(e.day,[]);m.get(e.day).push(e);}return[...m];}
+function wnDate(d,long){const [y,mo,da]=d.split('-').map(Number),dt=new Date(Date.UTC(y,mo-1,da));const M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'],W=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  return long?`${W[dt.getUTCDay()]} · ${M[mo-1]} ${da}, ${y}`:`${M[mo-1]} ${da}`;}
+function wnLi(e,dim){return`<li class="${dim&&!e.pop?'mn2':''}"><span><b>${e.tag}</b>${e.text}</span></li>`;}
+function wnShow(keep){WN.open=true;G.state='pause';firing=false;P.adsHeld=false;releaseLock();
   show(`<div class="wnp"><div class="pkh"><div class="kick">LATEST UPDATE</div><h2>WHAT'S NEW</h2><div class="ornl"><i></i></div></div>
-  <ul>${WN_ITEMS.map(([k,t])=>`<li><span><b>${k}</b>${t}</span></li>`).join('')}</ul>
-  <div class="ovb"><button class="bt" data-back onclick="wnOk()">OK</button></div></div>`,false,'dimx');}
-function wnOk(){if(!WN.open)return;WN.open=false;try{localStorage.setItem(WN_KEY,WN_VER);}catch(e){}hide();G.state='play';lock();ensureAudio();setTimeout(roomIntro,400);}
+  <ul>${wnRecent().map(e=>wnLi(e)).join('')}</ul>
+  <div class="ovb"><button class="bt" data-back onclick="wnOk()">OK</button><button class="bt gh" onclick="wnNotes(null,'pop')">ALL PATCH NOTES</button></div></div>`,keep,'dimx');}
+function wnOk(){if(!WN.open)return;WN.open=false;WN.back=null;try{localStorage.setItem(WN_KEY,wnVer());}catch(e){}hide();G.state='play';lock();ensureAudio();setTimeout(roomIntro,400);}
+function wnNotes(day,back,keep){WN.back=back;const ds=wnDays();if(!ds.length)return;day=day||ds[0][0];WN.day=day;const cur=ds.find(x=>x[0]===day)||ds[0];
+  show(`<div class="pnl pnn"><div class="hd"><h2>PATCH NOTES</h2><div class="sp"></div><div class="hint"><span><span class="kcp g">ESC</span> &nbsp;BACK</span></div></div>
+  <div class="rail">${ds.map(([d,es])=>`<button class="tb ${d===cur[0]?'on':''}" onclick="wnNotes('${d}',WN.back,true)">${wnDate(d)}<span class="d">${es.length}</span></button>`).join('')}</div>
+  <div class="rows"><h3>${wnDate(cur[0],true)}</h3><div class="cnt">${cur[1].length} change${cur[1].length>1?'s':''}</div><ul>${cur[1].map(e=>wnLi(e,true)).join('')}</ul></div>
+  <div class="ft"><span>NEWEST FIRST &nbsp;·&nbsp; <span class="kcp g">RS</span> SCROLL</span><button class="bt" data-back onclick="wnNotesBack()">${back==='pop'?'BACK':'DONE'}</button></div></div>`,keep,'dimx');
+  if(!WN.sc){WN.sc=1;requestAnimationFrame(wnScroll);}
+  if(!keep){const f=navEls(),j=f.indexOf(ov.querySelector('.tb.on'));if(j>=0){gpIdx=j;if(PAD.connected)menuNav(0,0,false,false);}}}
+function wnScroll(){if(!ov.querySelector('.pnn')){WN.sc=0;return;}requestAnimationFrame(wnScroll);let y=0;try{for(const g of navigator.getGamepads?navigator.getGamepads():[])if(g&&g.axes&&Math.abs(g.axes[3]||0)>.2)y=g.axes[3];}catch(e){}
+  const r=ov.querySelector('.pnn .rows');if(r&&y)r.scrollTop+=y*14;}
+function wnNotesBack(){if(WN.back==='pop')wnShow();else titleScreen();}
 (function(){const _ch=choose;choose=function(id){const first=G.state==='pick'&&G.introPend&&G.pickOpts.includes(id)&&!wnSeen();
     if(first)WN.block=1;try{_ch.apply(this,arguments);}finally{WN.block=0;}if(first&&G.state==='play')wnShow();};
   // don't grab the pointer (or go fullscreen) on the first pick when the popup follows; OK does it instead
   const _lk=lock;lock=function(){if(WN.block)return;return _lk.apply(this,arguments);};
   // the first pick queues roomIntro 400ms later; hold it until OK
   const _ri=roomIntro;roomIntro=function(){if(WN.open)return;return _ri.apply(this,arguments);};
-  const _rs=resume;resume=function(){if(WN.open){wnOk();return;}return _rs.apply(this,arguments);};
-  addEventListener('keydown',e=>{if(WN.open&&(e.code==='Enter'||e.code==='Space'||e.code==='Escape')){e.preventDefault();wnOk();}});})();
+  const _rs=resume;resume=function(){if(WN.open){if(ov.querySelector('.pnn'))wnShow();else wnOk();return;}return _rs.apply(this,arguments);};
+  addEventListener('keydown',e=>{if(ov.querySelector('.pnn')){if(e.code==='Escape'||e.code==='Backspace'){e.preventDefault();e.stopImmediatePropagation();wnNotesBack();}return;}
+    if(WN.open&&(e.code==='Enter'||e.code==='Space'||e.code==='Escape')){e.preventDefault();wnOk();}},true);})();
 </script>
 </body>
 </html>
