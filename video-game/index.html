@@ -383,6 +383,8 @@ button.ghost{background:transparent;color:#c8b49a;box-shadow:none;border:2px sol
 .pnl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;transform:rotate(45deg);background:#e0fbff;box-shadow:0 0 0 3px rgba(42,255,216,.25),0 0 10px var(--tl);border:none;cursor:pointer}
 .pnl input[type=range]::-moz-range-thumb{width:11px;height:11px;transform:rotate(45deg);background:#e0fbff;border:none;border-radius:0;box-shadow:0 0 10px var(--tl)}
 .pnl input[type=range].gpf{outline:none!important;box-shadow:0 0 0 2px rgba(255,255,255,.5)}
+.pnl input[type=range].gpedit{box-shadow:0 0 0 2px var(--tl),0 0 16px rgba(42,255,216,.55)!important}
+.pnl .sld b.gped{color:var(--tl);position:relative}.pnl .sld b.gped:before{content:'\25C0';position:absolute;left:-4px;top:0}.pnl .sld b.gped:after{content:'\25B6';position:absolute;right:-16px;top:0}
 .pnl .sld b,.pnl .info{font:10px 'Press Start 2P';color:var(--ink);min-width:50px;text-align:right}
 .pnl .info{font-size:9px;line-height:1.6;white-space:pre;color:var(--mut);text-align:right}
 .pnl .desc{padding:26px;border-left:1px solid rgba(42,255,216,.1);background:rgba(0,0,0,.18);overflow:auto}
@@ -3291,7 +3293,7 @@ function settingsScreen(back,keep){G.setBack=back;const tab=G.setTab||(G.setTab=
   show(`<div class="pnl stg"><div class="hd"><h2>SETTINGS</h2><div class="sp"></div><div class="hint"><span><span class="kcp g">Q</span> <span class="kcp g">E</span> &nbsp;TABS</span><span><span class="kcp g">ESC</span> &nbsp;BACK</span></div></div>
   <div class="rail">${STABS.map(t=>`${t[0]==='dev'?'<div class="dev">':''}<button class="tb ${t[0]===tab?'on':''}" onclick="G.setTab='${t[0]}';settingsScreen(G.setBack,false)"><svg><use href="#i-${t[2]}"/></svg>${t[1]}</button>${t[0]==='dev'?'</div>':''}`).join('')}</div>
   <div class="rows">${rows}</div><div class="desc" id="sdesc"></div>
-  <div class="ft"><span>CHANGES SAVE AUTOMATICALLY</span><span><span class="kcp g">LB</span> <span class="kcp g">RB</span> &nbsp;&nbsp;<button class="bt" data-back onclick="closeSettings()">DONE</button></span></div></div>`,keep,'dimx');setDesc(first);
+  <div class="ft"><span>CHANGES SAVE AUTOMATICALLY</span><span><span class="sldh" style="display:none;color:var(--tl)"><span class="kcp g">A</span> CONFIRM &nbsp;<span class="kcp g">B</span> CANCEL &nbsp;&nbsp;</span><span class="kcp g">LB</span> <span class="kcp g">RB</span> &nbsp;&nbsp;<button class="bt" data-back onclick="closeSettings()">DONE</button></span></div></div>`,keep,'dimx');setDesc(first);
   if(!keep){const f=navEls(),j=f.indexOf(ov.querySelector('.tb.on'));if(j>=0){gpIdx=j;if(PAD.connected)menuNav(0,0,false,false);}}}
 function setOpt(k){SET[k]=!SET[k];saveSet();settingsScreen(G.setBack,true);}
 function setVal(k,v){SET[k]=parseFloat(v);saveSet();const el=$('v_'+k);if(el)el.textContent=(k==='crt'||k==='shake'||k==='vol'||k==='amb'||k==='mus')?Math.round(SET[k]*100)+'%':SET[k].toFixed(2);}
@@ -3584,7 +3586,7 @@ function pollPad(dt){const gp=pickPad();
     else{PAD.navT-=dt;if(PAD.navT<=0){PAD.navT=.12;dx=hx;dy=hy;}}
     if(pr(4)||pr(5)){const d=pr(5)?1:-1;if(ov.querySelector('.stg'))setTab(d);else if(ov.querySelector('.lqp')&&!ov.querySelector('.lqpro')){lqSortI=(lqSortI+LQS.length+d)%LQS.length;legendsScreen();}}
     if(G.state==='pause'&&pr(9)&&!ov.querySelector('.stg')){resume();}
-    else if(dx||dy||pr(0)||pr(1))menuNav(dx,dy,pr(0),pr(1));
+    else if(dx||dy||pr(0)||pr(1)||pr(2))menuNav(dx,dy,pr(0),pr(1),pr(2));
   }
   PAD.ltPrev=ltOn;PAD.prev=gp.buttons.map(b=>!!(b&&(b.pressed||b.value>.5)));
 }
@@ -3600,10 +3602,14 @@ function navPick(cur,dx,dy,f){const r0=cur.getBoundingClientRect(),x0=r0.left+r0
   return best;}
 function navBack(){if(ov.querySelector('.stg')){closeSettings();return;}if(ov.querySelector('.lqwho')){heroKey(null);return;}
   const bk=ov.querySelector('[data-back]')||navEls().find(b=>/^[^A-Z]*(BACK|DONE)\b/.test((b.textContent||'').trim()));if(bk){bk.click();return;}if(G.state==='pause')resume();}
-function menuNav(dx,dy,a,back){const f=navEls();if(!f.length)return;
-  let cur=f.find(e=>e.classList.contains('gpf'));const idle=!dx&&!dy&&!a&&!back;
+function sldEdit(e,on){e.classList.toggle('gpedit',on);const v=e.nextElementSibling;if(v)v.classList.toggle('gped',on);const h=ov.querySelector('.sldh');if(h)h.style.display=on?'':'none';}
+function menuNav(dx,dy,a,back,x){const f=navEls();if(!f.length)return;
+  let cur=f.find(e=>e.classList.contains('gpf'));const idle=!dx&&!dy&&!a&&!back&&!x;
+  if(cur&&cur.classList.contains('gpedit')){if(dx){cur.value=parseFloat(cur.value)+dx*parseFloat(cur.step)*2;cur.dispatchEvent(new Event('input'));}
+    if(a||x){sldEdit(cur,false);sfx('click');}else if(back){cur.value=cur.dataset.gv;cur.dispatchEvent(new Event('input'));sldEdit(cur,false);}return;}
+  if(cur&&cur.type==='range'&&dx>0&&!dy)return;
+  if(cur&&cur.type==='range'&&(a||x)){cur.dataset.gv=cur.value;sldEdit(cur,true);sfx('click');return;}
   if(idle||!cur){gpIdx=clamp(gpIdx,0,f.length-1);cur=f[gpIdx];if(!idle&&!back){dx=dy=0;a=false;}}
-  else if(cur.type==='range'&&dx){cur.value=parseFloat(cur.value)+dx*parseFloat(cur.step)*2;cur.dispatchEvent(new Event('input'));dx=0;}
   if(dx||dy){const nx=navPick(cur,dx,dy,f);if(nx)cur=nx;}
   gpIdx=f.indexOf(cur);ov.querySelectorAll('.gpf').forEach(el=>{if(el!==cur)el.classList.remove('gpf');});cur.classList.add('gpf');const fe=cur;
   if(fe.classList.contains('card'))fe.dispatchEvent(new Event('mouseenter'));{const rw=fe.closest&&fe.closest('.srow');ov.querySelectorAll('.srow.cur').forEach(x=>x.classList.remove('cur'));if(rw){rw.classList.add('cur');setDesc(+rw.dataset.i);}}
