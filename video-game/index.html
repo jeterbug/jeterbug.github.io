@@ -252,6 +252,7 @@ button.ghost{background:transparent;color:#c8b49a;box-shadow:none;border:2px sol
 .ttlb{position:fixed;right:max(30px,4.5vw);top:60px;text-align:right;font:600 11px 'Cinzel',serif;letter-spacing:.25em;color:var(--mut)}
 .ttlb b{display:block;font:14px 'Press Start 2P';color:var(--ink);margin-top:8px;letter-spacing:0}.ttlb div{margin-bottom:22px}
 .ttlf{position:fixed;left:max(40px,7.5vw);right:max(30px,4.5vw);bottom:26px;display:flex;justify-content:space-between;align-items:center;gap:20px;font:600 11px 'Cinzel',serif;letter-spacing:.2em;color:var(--dim)}
+.ttlf b.gver{color:var(--tl);margin-left:10px;letter-spacing:.14em;text-shadow:0 0 8px rgba(42,255,216,.45)}
 .ttlf b{color:var(--mut);font-weight:700}
 
 /* v67 heroes + hall of legends */
@@ -577,6 +578,11 @@ button.ghost{background:transparent;color:#c8b49a;box-shadow:none;border:2px sol
   <div id="wp"><div id="wname"></div><div id="ammo"><b id="mag"></b><span id="res"></span></div><div id="slots"></div></div>
 </div>
 <div id="tabnote">Connect a <b>controller</b> or a <b>mouse + keyboard</b> to play</div><div id="mobblk"><svg class="rune" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3"><circle cx="50" cy="50" r="44"/><circle cx="50" cy="50" r="30" stroke-width="2" stroke-dasharray="4 6"/><path d="M50 12 L50 88 M50 30 L34 50 L50 70 L66 50 Z"/></svg><h1>COUSIN<span>//</span>QUEST</h1><p>The rifts only open on a <b>desktop or laptop</b>.</p><p class="m">Open this link on a computer with a keyboard and mouse (or a controller) to play.</p></div>
+<script>
+// ---- game version (bump GAME_BUILD each build) ----
+const GAME_BUILD=98;
+function gameVer(n=GAME_BUILD){return n<100?'v0.'+n:'v0.'+Math.floor(n/100)+'.'+(n%100);}
+</script>
 <script>(function(){try{const mm=q=>window.matchMedia&&matchMedia(q).matches;const touch=mm('(pointer:coarse)')&&!mm('(any-pointer:fine)'),ua=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   const sm=Math.min(screen.width,screen.height),phone=/iPhone|iPod/i.test(navigator.userAgent)||(/Android/i.test(navigator.userAgent)&&/Mobile/i.test(navigator.userAgent))||((touch||ua)&&sm<600);
   window.IS_PHONE=phone;if(phone){document.getElementById('mobblk').classList.add('on');return;}
@@ -3550,7 +3556,7 @@ function titleScreen(){if(!HERO){heroScreen();return;}G.state='title';$('hud').c
   <div class="ex"><button class="mn" onclick="roomSelect('title')">ROOM SELECT</button><button class="mn" onclick="openEditor()">LEVEL EDITOR</button><button class="mn" onclick="creditsScreen()">CREDITS</button></div></nav></div>
   <div class="lqcard"><div class="top">${lqHex(H)}<div><div class="k">PLAYING AS</div><div class="nm">${lqE(H.name)}</div></div>${H.wins?`<span class="lqcr" style="margin-left:auto">${LQCROWN}${H.wins}</span>`:''}</div>
   <div class="row"><div><b>#${lqRank(H)}</b>RANK</div><div><b>${lqN(H.kills)}</b>KILLS</div><div><b>${H.fast?fmt(H.fast):'—'}</b>FASTEST</div></div><button class="lqsw" onclick="heroScreen()"><span class="kcp g">C</span> &nbsp;CHANGE HERO</button></div>
-  <div class="ttlf"><span><span class="kcp">W</span> <span class="kcp">S</span> &nbsp;CHOOSE &nbsp;&nbsp; <span class="kcp">ENTER</span> &nbsp;SELECT &nbsp;&nbsp; <b>${PAD.connected?'CONTROLLER READY':'MOUSE + KEYBOARD'}</b></span><span>PRE-ALPHA BUILD</span></div>`,false,'ttl');}
+  <div class="ttlf"><span><span class="kcp">W</span> <span class="kcp">S</span> &nbsp;CHOOSE &nbsp;&nbsp; <span class="kcp">ENTER</span> &nbsp;SELECT &nbsp;&nbsp; <b>${PAD.connected?'CONTROLLER READY':'MOUSE + KEYBOARD'}</b></span><span>PRE-ALPHA BUILD <b class="gver">${gameVer()}</b></span></div>`,false,'ttl');}
 function helpScreen(){const r=(a,b)=>`<div><span>${a}</span><em>${b}</em></div>`;
   show(`<div class="pnl one"><div class="hd"><h2>HOW TO PLAY</h2><div class="sp"></div><div class="hint"><span><span class="kcp g">ESC</span> &nbsp;BACK</span></div></div><div class="body">
   <div class="grp">KEYBOARD + MOUSE</div><div class="ctab">${r('Move','WASD')}${r('Jump (double)','SPACE')}${r('Dash','SHIFT')}${r('Fire','LEFT CLICK')}${r('Aim / alt fire','RIGHT CLICK')}${r('Reload · vent misfire','R')}${r('Switch weapon','1 2 3 4 · WHEEL · Q')}${r('Mending Light (heal)','F')}${r('Arcane Bomb','G')}${r('Emberfall (when charged)','E')}${r('Music on / off','M')}${r('Pause','ESC')}</div>
